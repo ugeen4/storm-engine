@@ -10,6 +10,7 @@
 
 #pragma once
 #include <vector>
+#include <cstdint>
 
 class Character;
 class LocatorArray;

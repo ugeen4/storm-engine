@@ -1470,8 +1470,13 @@ bool SHIP::Mount(ATTRIBUTES *_pAShip)
     const entid_t temp_id = GetId();
     core.Send_Message(touch_id, "li", MSG_SHIP_CREATE, temp_id);
     // TODO: this is wrong
+#if (! defined __LCC__ )
     core.Send_Message(sea_id, "lic", MSG_SHIP_CREATE, temp_id,
                       CVECTOR(State.vPos.x + fXOffset, State.vPos.y, State.vPos.z + fZOffset));
+#else
+    core.Send_Message(sea_id, "lifff", MSG_SHIP_CREATE, temp_id,
+                      State.vPos.x + fXOffset, State.vPos.y, State.vPos.z + fZOffset);
+#endif
 
     GEOS::INFO ginfo;
     MODEL *pModel = GetModel();

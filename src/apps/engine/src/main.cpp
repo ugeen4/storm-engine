@@ -9,7 +9,9 @@
 #include "lifecycle_diagnostics_service.hpp"
 #include "logging.hpp"
 #include "os_window.hpp"
+#if (! defined __LCC__ )
 #include "steam_api.hpp"
+#endif
 #include "v_sound_service.h"
 #include "storm/fs.h"
 #include "watermark.hpp"
@@ -137,9 +139,9 @@ int main(int argc, char *argv[])
     mi_option_set(mi_option_segment_reset, 0);
     mi_option_set(mi_option_reserve_huge_os_pages, 1);
     mi_option_set(mi_option_segment_cache, 16);
-#ifdef _DEBUG
+//#ifdef _DEBUG
     mi_option_set(mi_option_verbose, 4);
-#endif
+//#endif
 
     SDL_InitSubSystem(SDL_INIT_EVENTS | SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER);
 
@@ -195,6 +197,7 @@ int main(int argc, char *argv[])
     }
 
     // initialize SteamApi through evaluating its singleton
+#if (! defined __LCC__ )
     try
     {
         steamapi::SteamApi::getInstance(!bSteam);
@@ -204,6 +207,7 @@ int main(int argc, char *argv[])
         spdlog::critical(e.what());
         return EXIT_FAILURE;
     }
+#endif    
 
     std::shared_ptr<storm::OSWindow> window = storm::OSWindow::Create(width, height, fullscreen);
     window->SetTitle("Sea Dogs");

@@ -213,11 +213,13 @@ inline int wildicmp(const char *wild, const char *string)
     return !*wild;
 }
 
+#if (! defined __LCC__)
 inline int wildicmp(const char *wild, const char8_t *string)
 {
     // TODO: implement for UTF8!
     return wildicmp(wild, reinterpret_cast<const char *>(string));
 }
+#endif
 
 class iStrHasher
 {

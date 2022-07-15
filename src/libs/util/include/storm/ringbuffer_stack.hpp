@@ -1,3 +1,4 @@
+#if (! defined __LCC__)
 #pragma once
 
 #include <cassert>
@@ -158,3 +159,4 @@ template <typename T, detail::power_of_two auto SIZE>
 ringbuffer_stack_push_guard(ringbuffer_stack<T, SIZE>) -> ringbuffer_stack_push_guard<T, SIZE>;
 
 } // namespace storm
+#endif

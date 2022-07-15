@@ -2,6 +2,7 @@
 
 #include "storm_d3dx9.h"
 
+#include <cstdio>
 #include <algorithm>
 
 #define WARN(...) fprintf(stdout, __VA_ARGS__)

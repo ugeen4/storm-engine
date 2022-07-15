@@ -261,8 +261,13 @@ void AIGroup::SailMainGroup(CVECTOR vPos, float fAngle, ATTRIBUTES *pACharacter)
 
         // clear foam
         // TODO: fix this. i and c are not correct
+#if (! defined __LCC__ )
         core.Send_Message(eidSea, "lic", MSG_SHIP_CREATE, pAIShip->GetShipEID(),
                           pAIShip->GetShipBasePointer()->State.vPos);
+#else
+        core.Send_Message(eidSea, "lifff", MSG_SHIP_CREATE, pAIShip->GetShipEID(),
+                          pAIShip->GetShipBasePointer()->State.vPos.x, pAIShip->GetShipBasePointer()->State.vPos.y, pAIShip->GetShipBasePointer()->State.vPos.z);
+#endif                          
     }
 }
 

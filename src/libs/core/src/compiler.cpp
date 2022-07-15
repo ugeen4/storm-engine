@@ -11,7 +11,11 @@
 #include "core_impl.h"
 #endif
 #include "logging.hpp"
+
+#ifndef __e2k__
 #include "script_cache.h"
+#endif
+
 #include "storm_assert.h"
 #include "debug-trap.h"
 
@@ -619,8 +623,10 @@ VDATA *COMPILER::ProcessEvent(const char *event_name)
 {
     // TODO: only do if stack debug if enabled (should be runtime configurable)
     // push event name to call stack
+#if (! defined __LCC__)    
     storm::ringbuffer_stack_push_guard push_guard(callStack_);
     push_guard.push(std::make_tuple("", 0U, event_name));
+#endif
 
     uint32_t event_code;
     uint32_t func_code;
@@ -854,12 +860,13 @@ bool COMPILER::BC_LoadSegment(const char *file_name)
     SegmentTable[index].Files_list = new STRINGS_LIST;
     SegmentTable[index].Files_list->SetStringDataSize(sizeof(OFFSET_INFO));
     auto result = false;
+#ifndef __e2k__    
     if (use_script_cache_)
     {
         // attempt to load from cache first
         result = LoadSegmentFromCache(SegmentTable[index]);
     }
-
+#endif
     if (!result)
     {
         result = Compile(SegmentTable[index]);
@@ -1220,9 +1227,9 @@ bool COMPILER::Compile(SEGMENT_DESC &Segment, char *pInternalCode, uint32_t pInt
     CompilerStage = CS_COMPILATION;
 
     RunningSegmentID = INVALID_SEGMENT_INDEX;
-
+#ifndef __e2k__
     script_cache_ = storm::ScriptCache();
-
+#endif
     //    bool bCDStop;
     bool bFunctionBlock;
     int32_t lvalue;
@@ -1238,11 +1245,13 @@ bool COMPILER::Compile(SEGMENT_DESC &Segment, char *pInternalCode, uint32_t pInt
         pProgram = nullptr;
         Program_size = 0;
         pSegmentSource = LoadFile(file_name, SegmentSize);
+#ifndef __e2k__        
         if (is_new && use_script_cache_)
         {
             script_cache_.files.emplace_back(file_name);
             script_cache_.crc = storm::script_cache::ComputeCRC(0, {pSegmentSource, SegmentSize});
         }
+#endif
         AppendProgram(pProgram, Program_size, pSegmentSource, SegmentSize, true);
         Segment.pData = pProgram;
         if (pProgram == nullptr)
@@ -1340,11 +1349,17 @@ bool COMPILER::Compile(SEGMENT_DESC &Segment, char *pInternalCode, uint32_t pInt
             {
                 return storm::iEquals(library.name, name);
             };
-
+#if( ! defined __LCC__ )
             if (std::ranges::find_if(LibriaryFuncs, comparator) != LibriaryFuncs.end())
             {
                 break;
             }
+#else
+	    if (std::find_if(begin(LibriaryFuncs), end(LibriaryFuncs), comparator) != LibriaryFuncs.end() )
+	    {
+		break;
+	    }
+#endif            
             //-----------------------------------------------------
 
             pClass = core_internal.FindVMA(Token.GetData());
@@ -1359,11 +1374,12 @@ bool COMPILER::Compile(SEGMENT_DESC &Segment, char *pInternalCode, uint32_t pInt
                 pLib->Init();
 
             LibriaryFuncs.emplace_back(pLib, Token.GetData());
+#ifndef __e2k__            
             if (use_script_cache_)
             {
                 script_cache_.script_libs.emplace_back(Token.GetData());
             }
-
+#endif
             break;
         }
         case INCLIDE_FILE:
@@ -1377,12 +1393,14 @@ bool COMPILER::Compile(SEGMENT_DESC &Segment, char *pInternalCode, uint32_t pInt
                     SetError("can't load file: %s", Token.GetData());
                     return false;
                 }
+#ifndef __e2k__                
                 if (use_script_cache_)
                 {
                     script_cache_.files.emplace_back(Token.GetData());
                     script_cache_.crc =
                         storm::script_cache::ComputeCRC(script_cache_.crc, {pApend_file, Append_file_size});
                 }
+#endif
                 if (bDebugInfo)
                 {
                     uint32_t aps;
@@ -1447,10 +1465,12 @@ bool COMPILER::Compile(SEGMENT_DESC &Segment, char *pInternalCode, uint32_t pInt
                     SetError("define redefinition: %s", di.name);
                     return false;
                 }
+#ifndef __e2k__                
                 if (use_script_cache_)
                 {
                     script_cache_.defines.emplace_back(storm::script_cache::Define{di.name, di.deftype, di.data4b});
                 }
+#endif                
             }
             break;
 
@@ -1534,11 +1554,13 @@ bool COMPILER::Compile(SEGMENT_DESC &Segment, char *pInternalCode, uint32_t pInt
 
                             return false;
                         }
+#ifndef __e2k__                        
                         if (use_script_cache_)
                         {
                             script_cache_.functions.emplace_back(storm::script_cache::Function{
                                 fi, std::vector<storm::script_cache::FunctionLocalVariable>{}});
                         }
+#endif                        
                         break;
                     }
                     Token.StepBack();
@@ -1757,13 +1779,14 @@ bool COMPILER::Compile(SEGMENT_DESC &Segment, char *pInternalCode, uint32_t pInt
                                 Token.Get();
                             }
                         }
-
+#ifndef __e2k__
                         if (use_script_cache_)
                         {
                             auto &cached_var = script_cache_.variables.emplace_back(vi);
                             cached_var.value = std::make_unique<DATA>();
                             *cached_var.value = *real_var->value;
                         }
+#endif                        
                     } while (Token.GetType() == COMMA);
                     Token.StepBack();
                     break;
@@ -1779,12 +1802,13 @@ bool COMPILER::Compile(SEGMENT_DESC &Segment, char *pInternalCode, uint32_t pInt
                         FuncTab.AddFuncArg(func_code, lvi, true);
                     else
                         FuncTab.AddFuncArg(func_code, lvi);
-
+#ifndef __e2k__
                     if (use_script_cache_)
                     {
                         script_cache_.functions.back().arguments.emplace_back(
                             storm::script_cache::FunctionLocalVariable{lvi, bExtern});
                     }
+#endif                    
                 }
             }
             else
@@ -1845,11 +1869,12 @@ bool COMPILER::Compile(SEGMENT_DESC &Segment, char *pInternalCode, uint32_t pInt
                         SetError("Duplicate variable name: %s", lvi.name.c_str());
                         return false;
                     }
-
+#ifndef __e2k__
                     if (use_script_cache_)
                     {
                         script_cache_.functions.back().local_variables.emplace_back(lvi);
                     }
+#endif                    
                 } while (Token.GetType() == COMMA);
                 Token.StepBack();
             }
@@ -1930,10 +1955,12 @@ bool COMPILER::Compile(SEGMENT_DESC &Segment, char *pInternalCode, uint32_t pInt
             fio->_CloseFile(fileS);
         }
     }
+#ifndef __e2k__    
     if (use_script_cache_)
     {
         SaveSegmentToCache(Segment);
     }
+#endif    
     return true;
 }
 
@@ -2167,10 +2194,12 @@ bool COMPILER::CompileBlock(SEGMENT_DESC &Segment, bool &bFunctionBlock, uint32_
                 }
                 // SetEventHandler(gs,Token.GetData(),1,true);
                 SetEventHandler(gs, Token.GetData(), 0, true);
+#ifndef __e2k__                
                 if (use_script_cache_)
                 {
                     script_cache_.event_handlers.emplace_back(storm::script_cache::EventHandler{gs, Token.GetData()});
                 }
+#endif                
             }
             else
             {
@@ -2961,14 +2990,19 @@ bool COMPILER::CompileBlock(SEGMENT_DESC &Segment, bool &bFunctionBlock, uint32_
                             SetError("Invalid function name: %s", Token.GetData());
                             return false;
                         }
-
+#ifndef __e2k__
                         auto func_name = Token.GetData();
                         auto cmp = [&func_name](const auto &func) { return storm::iEquals(func.info.name, func_name); };
+#if (! defined __LCC__ )                            
                         auto it = std::ranges::find_if(script_cache_.functions, cmp);
+#else
+			auto it = std::find_if(begin(script_cache_.functions), end(script_cache_.functions), cmp);
+#endif                                                                        
                         if (it != script_cache_.functions.end())
                         {
                             it->info.offset = Segment.BCode_Program_size;
                         }
+#endif                        
                     }
                 bExtern = false;
                 bImport = false;
@@ -3587,8 +3621,10 @@ bool COMPILER::BC_CallFunction(uint32_t func_code, uint32_t &ip, DATA *&pVResult
 
     // TODO: only do if stack debug if enabled (should be runtime configurable)
     // push function details to call stack
+#if (! defined __LCC__)    
     storm::ringbuffer_stack_push_guard push_guard(callStack_);
     push_guard.push(std::make_tuple(call_fi.decl_file_name.c_str(), call_fi.decl_line, call_fi.name.c_str()));
+#endif
 
     // number f arguments pushed into stack for this function call
     if (BC_TokenGet() != ARGS_NUM)
@@ -7153,6 +7189,7 @@ DATA *COMPILER::GetOperand(const char *pCodeBase, uint32_t &ip, S_TOKEN_TYPE *pT
     return nullptr;
 }
 
+#if (! defined __LCC__)
 void COMPILER::CollectCallStack() const
 {
     logStack_->trace("Call stack:");
@@ -7181,6 +7218,7 @@ void COMPILER::CollectCallStack() const
         callStackCopy.pop();
     }
 }
+#endif
 
 void COMPILER::PrintoutUsage()
 {
@@ -7228,6 +7266,7 @@ void COMPILER::PrintoutUsage()
     }
 }
 
+#ifndef __e2k__
 void COMPILER::LoadVariablesFromCache(storm::script_cache::Reader &reader, SEGMENT_DESC &segment)
 {
     const auto size = *reader.ReadData<size_t>();
@@ -7344,7 +7383,11 @@ void COMPILER::LoadByteCodeFromCache(storm::script_cache::Reader &reader, SEGMEN
     const auto code = reader.ReadBytes();
     segment.BCode_Program_size = segment.BCode_Buffer_size = code.size();
     segment.pCode = new char[segment.BCode_Buffer_size];
+#if (! defined __LCC__ )        
     std::ranges::copy(code, segment.pCode);
+#else
+    std::copy(code.begin(), code.end(), segment.pCode);
+#endif    
 
     // relocations data
     auto strings = std::unordered_map<uint32_t, std::string>();
@@ -7726,7 +7769,11 @@ void COMPILER::LoadDefinesFromCache(storm::script_cache::Reader &reader, SEGMENT
         case STRING: {
             auto value = reader.ReadBytes();
             const auto new_ptr = new char[value.size() + 1];
+#if (! defined __LCC__ )               
             std::ranges::copy(value, new_ptr);
+#else
+            std::copy(value.begin(), value.end(), new_ptr);
+#endif                        
             new_ptr[value.size()] = '\0';
             di.data4b = reinterpret_cast<uintptr_t>(new_ptr);
             break;
@@ -7736,6 +7783,7 @@ void COMPILER::LoadDefinesFromCache(storm::script_cache::Reader &reader, SEGMENT
         DefTab.AddDef(di);
     }
 }
+#endif
 
 void COMPILER::FormatAllDialog(const char *directory_name)
 {

@@ -11,8 +11,13 @@ class VDATA;
 
 namespace storm
 {
-using MessageParam = std::variant<uint8_t, uint16_t, uint32_t, int32_t, float, double, ATTRIBUTES *, entid_t, VDATA *,
+#if (! defined __LCC__)
+//using MessageParam = std::variant<uint8_t, uint16_t, uint32_t, int32_t, float, double, ATTRIBUTES *, entid_t, VDATA *,
                                   CVECTOR, std::string>;
+#else
+using MessageParam = std::variant<uint8_t, uint16_t, uint32_t, int32_t, float, double, ATTRIBUTES *, entid_t, VDATA *,
+                                  std::string>;
+#endif
 
 namespace detail {
 
@@ -50,73 +55,75 @@ class MESSAGE final
     uint8_t Byte()
     {
         ValidateFormat('b');
-        return get<uint8_t>(params_[index - 1]);
+        return std::get<uint8_t>(params_[index - 1]);
     }
 
     uint16_t Word()
     {
         ValidateFormat('w');
-        return get<uint16_t>(params_[index - 1]);
+        return std::get<uint16_t>(params_[index - 1]);
     }
 
     int32_t Long()
     {
         ValidateFormat('l');
-        return get<int32_t>(params_[index - 1]);
+        return std::get<int32_t>(params_[index - 1]);
     }
 
     int32_t Dword()
     {
         ValidateFormat('u');
-        return static_cast<int32_t>(get<uint32_t>(params_[index - 1]));
+        return static_cast<int32_t>(std::get<uint32_t>(params_[index - 1]));
     }
 
     float Float()
     {
         ValidateFormat('f');
-        return get<float>(params_[index - 1]);
+        return std::get<float>(params_[index - 1]);
     }
 
     double Double()
     {
         ValidateFormat('d');
-        return get<double>(params_[index - 1]);
+        return std::get<double>(params_[index - 1]);
     }
 
     uintptr_t Pointer()
     {
         ValidateFormat('p');
-        return get<uintptr_t>(params_[index - 1]);
+        return std::get<uintptr_t>(params_[index - 1]);
     }
 
     ATTRIBUTES *AttributePointer()
     {
         ValidateFormat('a');
-        return get<ATTRIBUTES *>(params_[index - 1]);
+        return std::get<ATTRIBUTES *>(params_[index - 1]);
     }
 
     entid_t EntityID()
     {
         ValidateFormat('i');
-        return get<entid_t>(params_[index - 1]);
+        return std::get<entid_t>(params_[index - 1]);
     }
 
     VDATA *ScriptVariablePointer()
     {
         ValidateFormat('e');
-        return get<VDATA *>(params_[index - 1]);
+        return std::get<VDATA *>(params_[index - 1]);
     }
 
+#if (! defined __LCC__)
     CVECTOR CVector()
     {
         ValidateFormat('c');
-        return get<CVECTOR>(params_[index - 1]);
+        return std::get<CVECTOR>(params_[index - 1]);
     }
+#endif
 
     const std::string &String()
     {
         ValidateFormat('s');
-        return get<std::string>(params_[index - 1]);
+        return std::get<std::string>(params_[index - 1]);
     }
 
     bool Set(int32_t value)
@@ -242,8 +249,10 @@ class MESSAGE final
             return va_arg(args, entid_t);
         case 'e':
             return va_arg(args, VDATA *);
+#if (! defined __LCC__)            
         case 'c':
             return va_arg(args, CVECTOR);
+#endif            
         case 's': {
             char *ptr = va_arg(args, char *);
             return std::string(ptr);

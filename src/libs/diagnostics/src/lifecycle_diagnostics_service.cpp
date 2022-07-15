@@ -160,7 +160,7 @@ LifecycleDiagnosticsService::~LifecycleDiagnosticsService()
 LifecycleDiagnosticsService::Guard LifecycleDiagnosticsService::initialize(const bool enableCrashReports)
 {
     loggingService_->initialize();
-
+#if (! defined __LCC__)
     if (!initialized_)
     {
         // TODO: make this crossplatform
@@ -179,18 +179,19 @@ LifecycleDiagnosticsService::Guard LifecycleDiagnosticsService::initialize(const
 
         initialized_ = sentry_init(options) == 0;
     }
-
+#endif
     return Guard(*this);
 }
 
 void LifecycleDiagnosticsService::terminate() const
 {
     loggingService_->terminate();
-
+#if (! defined __LCC__)
     if (initialized_)
     {
         sentry_close();
     }
+#endif    
 }
 
 void LifecycleDiagnosticsService::notifyAfterRun() const
@@ -210,6 +211,7 @@ void LifecycleDiagnosticsService::setCrashInfoCollector(crash_info_collector f)
     collectCrashInfo_ = std::move(f);
 }
 
+#if (! defined __LCC__)
 sentry_value_t LifecycleDiagnosticsService::beforeCrash(const sentry_value_t event, void * hint, void *closure)
 {
     const auto *self = static_cast<LifecycleDiagnosticsService *>(closure);
@@ -243,5 +245,5 @@ sentry_value_t LifecycleDiagnosticsService::beforeCrash(const sentry_value_t eve
 
     return event;
 }
-
+#endif
 } // namespace storm::diag

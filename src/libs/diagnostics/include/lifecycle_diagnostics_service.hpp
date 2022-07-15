@@ -4,8 +4,10 @@
 #include <functional>
 #include <memory>
 
+#if (! defined __LCC__)
 #define SENTRY_BUILD_STATIC 1
 #include <sentry.h>
+#endif
 
 namespace storm::diag
 {
@@ -56,8 +58,9 @@ class LifecycleDiagnosticsService final
     bool initialized_{false};
     std::unique_ptr<LoggingService> loggingService_;
     crash_info_collector collectCrashInfo_;
-
+#if (! defined __LCC__)
     static sentry_value_t beforeCrash(sentry_value_t event, void *hint, void *closure);
+#endif    
 };
 
 } // namespace storm::diag

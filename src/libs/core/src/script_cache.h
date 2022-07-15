@@ -1,3 +1,4 @@
+#ifndef __e2k__
 #pragma once
 #include "s_functab.h"
 
@@ -88,13 +89,21 @@ public:
     void WriteData(const T &data)
     {
         auto data_bytes = std::string_view(reinterpret_cast<const char *>(&data), sizeof(data));
+#if (! defined __LCC__ )            
         std::ranges::copy(data_bytes, std::back_inserter(data_));
+#else
+        std::copy(data_bytes.begin(), data_bytes.end(), std::back_inserter(data_));
+#endif        
     }
 
     void WriteBytes(std::string_view data)
     {
         WriteData(data.size());
+#if (! defined __LCC__ )            
         std::ranges::copy(data, std::back_inserter(data_));
+#else
+        std::copy(data.begin(), data.end(), std::back_inserter(data_));
+#endif        
     }
 
     auto &GetData() const noexcept
@@ -169,3 +178,4 @@ struct ScriptCache
     uint32_t crc;
 };
 }
+#endif

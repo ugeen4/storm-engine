@@ -8,7 +8,7 @@ const char *convert_path_sep(const char *cPath);
 #else // NOT _WIN32
 
 #include <limits.h>
-
+#include <cstdarg>
 #include "storm_d3dx9.h"
 #include "winuser.rh"
 #include "safe_types.h"

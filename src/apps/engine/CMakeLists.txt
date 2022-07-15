@@ -20,6 +20,9 @@ STORM_SETUP(
     DEPENDENCIES
 
     ${MIMALLOC_DEP}
+    ${OGGVORBIS_LIBRARIES} 
+    ${OPENAL_LIBRARY}
+    ${Spdlog_LIBRARY}
 
     # internal
     core
@@ -30,8 +33,8 @@ STORM_SETUP(
 
     # external
     mimalloc
-    sentry-native
-    sdl
+    # sentry-native
+    ${SDL_LIBRARIES}
     zlib
 
     # system

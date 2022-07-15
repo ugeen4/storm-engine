@@ -17,9 +17,14 @@
 #include "strings_list.h"
 #include "token.h"
 #include "logging.hpp"
-#include "script_cache.h"
 
+#ifndef __e2k__
+#include "script_cache.h"
+#endif
+
+#if (! defined __LCC__)
 #include "storm/ringbuffer_stack.hpp"
+#endif
 
 #define BCODE_BUFFER_BLOCKSIZE 4096
 #define IOBUFFER_SIZE 65535
@@ -261,12 +266,15 @@ class COMPILER : public VIRTUAL_COMPILER
     // writes down current script stack (internal functions+script functions+events) to logfile
     // currently used for collecting additional crash info
     // TODO: use it for internal errors also
+#if (! defined __LCC__)
     void CollectCallStack() const;
+#endif
 
     // printout script functions usage
     void PrintoutUsage();
 
 private:
+#ifndef __e2k__
     [[nodiscard]] std::filesystem::path GetSegmentCachePath(const SEGMENT_DESC &segment) const;
 
     bool LoadSegmentFromCache(SEGMENT_DESC &segment);
@@ -286,6 +294,7 @@ private:
     void SaveScriptLibrariesToCache(storm::script_cache::Writer &writer);
     void SaveEventHandlersToCache(storm::script_cache::Writer &writer);
     void SaveByteCodeToCache(storm::script_cache::Writer &writer, const SEGMENT_DESC &segment);
+#endif
 
     COMPILER_STAGE CompilerStage;
     STRINGS_LIST LabelTable;
@@ -362,9 +371,13 @@ private:
     // backtrace stack
     // NB: pointers are safe as long as we pop elements before they expire
     static constexpr size_t CALLSTACK_SIZE = 64U;
+#if (! defined __LCC__)
     storm::ringbuffer_stack<std::tuple<const char *, size_t, const char *>, CALLSTACK_SIZE> callStack_;
+#endif
 
     // attempt to read/write script cache?
     bool use_script_cache_;
+#ifndef __e2k__    
     storm::ScriptCache script_cache_;
+#endif    
 };

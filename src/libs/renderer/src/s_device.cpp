@@ -12,7 +12,9 @@
 
 #include <algorithm>
 
+#ifdef _WIN32
 #include <fmt/chrono.h>
+#endif
 
 #ifdef _WIN32
 #include <DxErr.h>
@@ -494,8 +496,16 @@ bool DX9RENDER::Init()
         // screenshot format and extension
         ini->ReadString(nullptr, "screenshot_format", str, sizeof(str), "jpg");
         screenshotExt = str;
+        
+#if (! defined __LCC__ )        
         std::ranges::transform(screenshotExt, screenshotExt.begin(),
                                [](const unsigned char c) { return std::tolower(c); });
+#else
+	std::transform(screenshotExt.cbegin(),screenshotExt.cend(),screenshotExt.begin(),
+				[](const unsigned char c) { return std::tolower(c); });
+#endif
+                               
+                               
 #ifdef _WIN32 // Screenshot
         screenshotFormat = GetScreenshotFormat(str);
         if (screenshotFormat == D3DXIFF_FORCE_DWORD)
@@ -3283,6 +3293,7 @@ void DX9RENDER::MakeScreenShot()
         return;
     }
 
+#ifdef _WIN32 // Screenshot
     const auto screenshot_base_filename = fmt::format("{:%Y-%m-%d_%H-%M-%S}", fmt::localtime(std::time(nullptr)));
     auto screenshot_path = fs::GetScreenshotsPath() / screenshot_base_filename;
     screenshot_path.replace_extension(screenshotExt);
@@ -3291,7 +3302,7 @@ void DX9RENDER::MakeScreenShot()
         screenshot_path.replace_filename(screenshot_base_filename + "_" + std::to_string(i));
         screenshot_path.replace_extension(screenshotExt);
     }
-#ifdef _WIN32 // Screenshot
+
     D3DXSaveSurfaceToFile(screenshot_path.c_str(), screenshotFormat, surface, nullptr, nullptr);
 #endif
 

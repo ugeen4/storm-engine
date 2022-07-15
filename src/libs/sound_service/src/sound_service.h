@@ -5,7 +5,9 @@
 #include "v_sound_service.h"
 #include "v_module_api.h"
 #include <dx9render.h>
-#include <fmod.hpp>
+
+#include <AL/al.h>
+#include <AL/alc.h>
 
 #include <string>
 
@@ -26,14 +28,17 @@ class SoundService : public VSoundService
     bool bShowDebugInfo;
     bool initialized;
 
-    FMOD::System *system;
-    FMOD::Sound *OGG_sound[2];
+    ALCcontext *openALContext;
+    ALCdevice  *openALDevice;
+    ALCboolean contextMadeCurrent;
+
+//    OPENAL_BUFFER *OGG_sound[2];
 
     struct tSoundCache
     {
         uint32_t dwNameHash;
         std::string Name;
-        FMOD::Sound *sound;
+//        OPENAL_BUFFER *sound;
         float fTimeFromLastPlay;
         eSoundType type;
 
@@ -41,7 +46,7 @@ class SoundService : public VSoundService
             : type()
         {
             dwNameHash = 0;
-            sound = nullptr;
+//            sound = nullptr;
             fTimeFromLastPlay = 0.0f;
         }
     };
@@ -53,7 +58,7 @@ class SoundService : public VSoundService
         float fFaderDeltaInSec;
 
         bool bFree;
-        FMOD::Channel *channel;
+//        OPENAL_SOUND *channel;
         eVolumeType type;
         eSoundType sound_type;
         float fSoundVolume;
@@ -65,7 +70,7 @@ class SoundService : public VSoundService
             : sound_type(), fSoundVolume(0)
         {
             bFree = true;
-            channel = nullptr;
+//            channel = nullptr;
             type = VOLUME_FX;
 
             fFaderNeedVolume = 0;
@@ -82,6 +87,11 @@ class SoundService : public VSoundService
         std::string Name;
         uint32_t dwHash;
         unsigned int position;
+    };
+
+    struct FMOD_VECTOR 
+    {
+        float x,y,z;
     };
 
     std::vector<PlayedOGG> OGGPosition;

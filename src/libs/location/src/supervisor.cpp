@@ -381,8 +381,11 @@ std::vector<Supervisor::FindCharacter> Supervisor::FindCharacters(Character *chr
         {
             return lhs.d2 < rhs.d2;
         };
-
+#if (! defined __LCC__ )               
         std::ranges::sort(found_characters, comparator);
+#else
+        std::sort(found_characters.begin(), found_characters.end(), comparator);
+#endif        
     }
     return found_characters;
 }

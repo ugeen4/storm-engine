@@ -396,8 +396,10 @@ bool SDLInput::KeyboardModState(const KeyboardKey &key) const
         return SDL_GetModState() & KMOD_NUM;
     else if (key == VK_CAPITAL)
         return SDL_GetModState() & KMOD_CAPS;
+#if (! defined __LCC__ )            
     else if (key == VK_SCROLL)
         return SDL_GetModState() & KMOD_SCROLL;
+#endif        
     else
        return false;
 }

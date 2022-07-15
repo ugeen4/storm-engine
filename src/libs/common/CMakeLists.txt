@@ -5,5 +5,5 @@ endif()
 STORM_SETUP(
     TARGET_NAME common
     TYPE library
-    DEPENDENCIES shared_headers util spdlog directx ${SYSTEM_DEPS}
+    DEPENDENCIES shared_headers util ${Spdlog_LIBRARY} directx ${SYSTEM_DEPS}
 )

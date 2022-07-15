@@ -36,7 +36,11 @@ std::string_view ReadWord(const std::string_view &str, std::string_view::const_i
 
     it = end;
 
+#if (! defined __LCC__ )
     return std::string_view(begin, end);
+#else
+    return std::string_view(&(*begin), end - begin);
+#endif    
 }
 
 /// @brief Read text until new token starts ('#' symbol)
@@ -54,12 +58,20 @@ std::string_view ReadText(const std::string_view &str, std::string_view::const_i
     it = end;
 
     /// Trim trailing whitespaces
+#if (! defined __LCC__ )
     auto text = std::string_view(begin, end);
+#else
+    auto text = std::string_view(&(*begin), end - begin);
+#endif    
     end = std::find_if(text.crbegin(), text.crend(), [](const char ch) {
               return !isspace(static_cast<unsigned char>(ch));
           }).base();
 
+#if (! defined __LCC__ )
     return std::string_view(text.begin(), end); ///< We must use text.begin() because end is now belongs to text
+#else
+    return std::string_view(&(*text.begin()), end - text.begin()); ///< We must use text.begin() because end is now belongs to text
+#endif    
 }
 
 /// @brief Read token with all related data
@@ -76,7 +88,13 @@ std::tuple<Token, std::string_view, std::string_view> ReadFullToken(const std::s
         return {Token::Invalid, "", ""};
 
     const auto tokenString = ReadWord(str, it);
+#if (! defined __LCC__ )
     const auto token = kTokenMap.contains(tokenString) ? kTokenMap.at(tokenString) : Token::Unknown;
+#else
+    auto token = Token::Unknown;
+    auto search = kTokenMap.find(tokenString);
+    if (search != kTokenMap.end()) token = kTokenMap.at(tokenString);
+#endif
 
     const auto id = ReadWord(str, it);
     const auto text = ReadText(str, it);
@@ -115,7 +133,11 @@ std::pair<std::string_view, std::string_view::const_iterator> ReadUserDataID(con
 
     it = std::next(textEnd);
 
+#if (! defined __LCC__ )
     return {std::string_view(textStart, textEnd), patternStart};
+#else
+    return {std::string_view(&(*textStart), textEnd - textStart), patternStart};
+#endif    
 };
 
 } // namespace

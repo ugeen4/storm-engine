@@ -7,11 +7,11 @@ if (STORM_ENABLE_STEAM)
 endif()
 
 if(STORM_ENABLE_CRASH_REPORTS)
-	add_definitions(-DSTORM_ENABLE_CRASH_REPORTS=1)
+    add_definitions(-DSTORM_ENABLE_CRASH_REPORTS=1)
 endif()
 
 if(STORM_WATERMARK_FILE)
-  add_definitions(-DSTORM_WATERMARK_FILE="${STORM_WATERMARK_FILE}")
+    add_definitions(-DSTORM_WATERMARK_FILE="${STORM_WATERMARK_FILE}")
 endif()
 
 if (MSVC)
@@ -40,11 +40,15 @@ if (MSVC)
     add_link_options("$<$<CONFIG:Release>:/OPT:ICF>") # Perform identical COMDAT folding, needs to be explicitly specified with /DEBUG
     add_link_options("$<$<CONFIG:Release>:/LTCG>") # Enable link-time code generation
 else()
-    add_compile_options(-std=c++20)
+    add_compile_options(-std=c++17)
+#    add_compile_options(-fwhole)
 
     # Verbose output
     add_compile_options(-v)
     add_link_options(-v)
+    add_link_options(-lpthread)
+    add_link_options(-ltbb)
+#    add_link_options(-fwhole)
 
     # Always generate debug information
     add_compile_options(-g)

@@ -3,7 +3,9 @@
 #include <algorithm>
 #include <cassert>
 #include <limits>
+#if (! defined __LCC__ )            
 #include <ranges>
+#endif
 #include <type_traits>
 
 #include "v_module_api.h"
@@ -59,10 +61,19 @@ void EntityManager::AddToLayer(const layer_index_t index, EntityInternalData &da
     auto &entity_ids = layer.entity_ids;
 
     // duplicate assert
+#if (! defined __LCC__ )            
     assert(std::ranges::find(entity_ids, data.id) == std::end(entity_ids));
+#else
+    assert(std::find(begin(entity_ids), end(entity_ids), data.id) == std::end(entity_ids));
+#endif
 
+#if (! defined __LCC__ )            
     const auto targetIdx =
         std::distance(std::begin(priorities), std::ranges::upper_bound(priorities, priority));
+#else
+    const auto targetIdx =
+        std::distance(std::begin(priorities), std::upper_bound(priorities.begin(), priorities.end(), priority));
+#endif
 
     priorities.insert(std::begin(priorities) + targetIdx, priority);
     entity_ids.insert(std::begin(entity_ids) + targetIdx, data.id);
@@ -81,9 +92,17 @@ void EntityManager::RemoveFromLayer(const layer_index_t index, EntityInternalDat
     auto &priorities = layer.priorities;
     auto &entity_ids = layer.entity_ids;
 
+#if (! defined __LCC__ )            
     const auto ssize = std::ssize(priorities);
+#else
+    const auto ssize = std::size(priorities);
+#endif
 
+#if (! defined __LCC__ )            
     const auto lowerIdx = std::distance(std::begin(priorities), std::ranges::lower_bound(priorities, priority));
+#else
+    const auto lowerIdx = std::distance(std::begin(priorities), std::lower_bound(priorities.begin(), priorities.end(), priority));
+#endif
     assert(lowerIdx < ssize);
 
     // look through this priority only
@@ -255,7 +274,11 @@ entity_container_cref EntityManager::GetEntityIds(const layer_type_t type) const
 
         if (it->type == type)
         {
+#if (! defined __LCC__ )            
             std::ranges::copy(it->entity_ids, std::back_inserter(result));
+#else
+	    std::copy(it->entity_ids.begin(), it->entity_ids.end(), std::back_inserter(result));
+#endif
         }
     }
     
@@ -466,7 +489,11 @@ entid_t EntityManager::InsertEntity(entptr_t ptr, hash_t hash)
 
 void EntityManager::ForEachEntity(const std::function<void(entptr_t)> &f)
 {
+#if (! defined __LCC__ )            
     std::ranges::for_each(entities_, [&](const EntityInternalData& data) {
+#else
+    std::for_each(entities_.begin(), entities_.end(), [&](const EntityInternalData& data) {
+#endif    
         if (const auto entity_ptr = GetEntityPointer(data.id))
             {
                 f(entity_ptr);

@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.18)
 project(storm-engine)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+set(STORM_EXTERN_DIR "${CMAKE_CURRENT_SOURCE_DIR}/extern")
+
 include(conan)
 include(StormSetup)
 
@@ -14,6 +16,16 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Rel
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Debug)
 
 set(STORM_WATERMARK_FILE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/watermark.hpp CACHE FILEPATH "Include file containing build revision, etc." FORCE)
+
+message(STATUS "CMAKE_SYSTEM_PROCESSOR: " ${CMAKE_SYSTEM_PROCESSOR})
+if (CMAKE_SYSTEM_PROCESSOR MATCHES "e2k")
+    set(PROJECT_PLATFORM_E2K TRUE)
+endif()
+
+if (PROJECT_PLATFORM_E2K)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -march=native -ffast -ffast-math")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I${Spdlog_INCLUDE_DIR} -march=native -ffast -ffast-math")
+endif()
 
 ### Set up third-party dependencies
 set(ENV{CONAN_REVISIONS_ENABLED} 1)
@@ -37,16 +49,32 @@ conan_cmake_run(CONANFILE conanfile.py
 )
 
 if (NOT WIN32)
+    find_package(Spdlog REQUIRED)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I${Spdlog_INCLUDE_DIR}")
+    find_package(SDL REQUIRED)
+    message(STATUS "SDL_LIBRARIES=${SDL_LIBRARIES}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I${SDL_INCLUDE_DIR} -fsigned-char")
+    
+    find_package(OpenAL REQUIRED)
+    find_package(OGGVORBIS REQUIRED)
+    if (OPENAL_FOUND AND OGGVORBIS_FOUND)
+        INCLUDE_DIRECTORIES(${OPENAL_INCLUDE_DIR})
+        INCLUDE_DIRECTORIES(${OGG_INCLUDE_DIR} ${VORBIS_INCLUDE_DIR})
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I${OPENAL_INCLUDE_DIR} -I${OGG_INCLUDE_DIR} -I${VORBIS_INCLUDE_DIR}")
+    endif()
+
+    message(STATUS "CMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}")
+
     message("Using DXVK-native for D3D9 API")
 
     include(ExternalProject)
     ExternalProject_Add(dxvk-native
-        GIT_REPOSITORY    https://github.com/Joshua-Ashton/dxvk-native
-        GIT_TAG           a2dc99c407340432d4ba5bfa29efa685c27942ea
+        GIT_REPOSITORY    https://github.com/ugeen4/dxvk-native
+        GIT_TAG           7a4dda1fdf0568d42708badcebc6e1aa487e6201
         GIT_SHALLOW       ON
         BUILD_ALWAYS      OFF
         CONFIGURE_HANDLED_BY_BUILD ON
-        CONFIGURE_COMMAND meson ../dxvk-native
+        CONFIGURE_COMMAND meson --buildtype "release" ../dxvk-native
         BUILD_COMMAND     ninja
         INSTALL_COMMAND   ""
     )
