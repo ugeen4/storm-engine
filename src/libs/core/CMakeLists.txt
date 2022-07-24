@@ -1,14 +1,15 @@
 if (WIN32)
-  set(CORE_DEP "diagnostics" 
-               "shared_headers" 
+  set(CORE_DEP "diagnostics"
+               "shared_headers"
                "steam_api" 
-               "fast_float" 
+               "fast_float"
                ${SDL_LIBRARIES}
   )
 else()
-  set(CORE_DEP "diagnostics" 
-               "shared_headers" 
-               "fast_float" 
+  set(CORE_DEP "diagnostics"
+               "shared_headers"
+               "steam_api"
+               "fast_float"
                ${SDL_LIBRARIES}
   )
 endif()

@@ -11,10 +11,7 @@
 #include "debug-trap.h"
 
 #include <algorithm>
-
-#ifdef _WIN32
-#include <fmt/chrono.h>
-#endif
+#include <spdlog/fmt/chrono.h>
 
 #ifdef _WIN32
 #include <DxErr.h>
@@ -3293,7 +3290,6 @@ void DX9RENDER::MakeScreenShot()
         return;
     }
 
-#ifdef _WIN32 // Screenshot
     const auto screenshot_base_filename = fmt::format("{:%Y-%m-%d_%H-%M-%S}", fmt::localtime(std::time(nullptr)));
     auto screenshot_path = fs::GetScreenshotsPath() / screenshot_base_filename;
     screenshot_path.replace_extension(screenshotExt);
@@ -3302,7 +3298,7 @@ void DX9RENDER::MakeScreenShot()
         screenshot_path.replace_filename(screenshot_base_filename + "_" + std::to_string(i));
         screenshot_path.replace_extension(screenshotExt);
     }
-
+#ifdef _WIN32 // Screenshot
     D3DXSaveSurfaceToFile(screenshot_path.c_str(), screenshotFormat, surface, nullptr, nullptr);
 #endif
 

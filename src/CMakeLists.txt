@@ -51,7 +51,7 @@ else()
 #    add_link_options(-fwhole)
 
     # Always generate debug information
-    add_compile_options(-g)
+#    add_compile_options(-g)
     add_link_options(-g)
 endif()
 

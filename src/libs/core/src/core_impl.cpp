@@ -3,9 +3,7 @@
 #include "compiler.h"
 #include "controls.h"
 #include "storm/fs.h"
-#if (!defined __e2k__)
 #include "steam_api.hpp"
-#endif
 
 #include <fstream>
 
@@ -190,9 +188,7 @@ bool CoreImpl::Run()
     ProcessExecute(); // transfer control to objects via Execute() function
     ProcessRealize(); // transfer control to objects via Realize() function
 
-#if (! defined __e2k__)
     steamapi::SteamApi::getInstance().RunCallbacks();
-#endif    
 
     if (Controls)
         Controls->Update(Timer.rDelta_Time);

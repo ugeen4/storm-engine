@@ -9,9 +9,7 @@
 #include "lifecycle_diagnostics_service.hpp"
 #include "logging.hpp"
 #include "os_window.hpp"
-#if (! defined __LCC__ )
 #include "steam_api.hpp"
-#endif
 #include "v_sound_service.h"
 #include "storm/fs.h"
 #include "watermark.hpp"
@@ -197,7 +195,6 @@ int main(int argc, char *argv[])
     }
 
     // initialize SteamApi through evaluating its singleton
-#if (! defined __LCC__ )
     try
     {
         steamapi::SteamApi::getInstance(!bSteam);
@@ -207,7 +204,6 @@ int main(int argc, char *argv[])
         spdlog::critical(e.what());
         return EXIT_FAILURE;
     }
-#endif    
 
     std::shared_ptr<storm::OSWindow> window = storm::OSWindow::Create(width, height, fullscreen);
     window->SetTitle("Sea Dogs");
