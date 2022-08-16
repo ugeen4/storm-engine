@@ -296,9 +296,9 @@ void GEOM_SERVICE_R::SetMaterial(const GEOS::MATERIAL &mt)
     RenderService->SetTextureStageState(2, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
 
     // block for Sea Dogs: Return Of the legend -->
-    // RenderService->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
+    RenderService->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
 
-    RenderService->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+    //RenderService->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
 
     RenderService->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
     RenderService->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
