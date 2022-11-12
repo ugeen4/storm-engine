@@ -1596,8 +1596,10 @@ void XINTERFACE::SetTooltip(const char *pcHeader, const char *pcText1, uint32_t 
     CXI_BORDER *pNodFrame =
         pTmpNod ? pTmpNod->m_nNodeType == NODETYPE_BORDER ? static_cast<CXI_BORDER *>(pTmpNod) : nullptr : nullptr;
     pTmpNod = FindNode("tooltip_titlerect", nullptr);
-    CXI_RECTANGLE *pNodTitleRect =
-        pTmpNod ? pTmpNod->m_nNodeType == NODETYPE_RECTANGLE ? static_cast<CXI_RECTANGLE *>(pTmpNod) : nullptr
+//    CXI_RECTANGLE *pNodTitleRect =
+    CXI_VIDEO *pNodTitleRect =
+//        pTmpNod ? pTmpNod->m_nNodeType == NODETYPE_RECTANGLE ? static_cast<CXI_RECTANGLE *>(pTmpNod) : nullptr
+        pTmpNod ? pTmpNod->m_nNodeType == NODETYPE_VIDEO ? static_cast<CXI_VIDEO *>(pTmpNod) : nullptr
                 : nullptr;
     pTmpNod = FindNode("tooltip_picture", nullptr);
     CXI_PICTURE *pNodPic =
