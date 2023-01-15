@@ -215,6 +215,29 @@ technique LocationModelBlend
     }
 }
 
+technique LocationModelBlendLighting
+{
+    pass p0
+    {
+        Lighting = true;
+        FogEnable = true;
+        AlphaTestEnable = false;
+        AlphaBlendEnable = true;
+        SrcBlend = srcalpha;
+        DestBlend = invsrcalpha;
+        ZEnable = true;
+        ZWriteEnable = false;
+        ColorArg1[0] = texture;
+        ColorArg2[0] = diffuse;
+        ColorOp[0] = modulate2x;
+        ColorOp[1] = disable;
+        AlphaArg1[0] = texture;
+        AlphaArg2[0] = diffuse;
+        AlphaOp[0] = modulate;
+        AlphaOp[1] = disable;
+    }
+}
+
 technique ShootParticles
 {
     pass p0

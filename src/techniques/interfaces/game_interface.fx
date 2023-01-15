@@ -783,16 +783,24 @@ technique iInfoShowerPic
         AlphaTestEnable = false;
         AlphaBlendEnable = true;
         ZEnable = false;
-        ColorVertex = true;
-
-        ColorOp[0] = selectarg1;
+//        ColorVertex = true;
+        
         ColorArg1[0] = texture;
-
+        ColorOp[0] = selectarg1;
+//        ColorOp[0] = blendtexturealpha;
+        AlphaArg1[0] = current;
         AlphaOp[0] = SelectArg1;
-        AlphaArg1[0] = texture;
-
-        ColorOp[1] = disable;
         AlphaOp[1] = disable;
+        ColorOp[2] = disable;
+
+//        ColorOp[0] = selectarg1;
+//        ColorArg1[0] = texture;
+
+//        AlphaOp[0] = SelectArg1;
+//        AlphaArg1[0] = texture;
+
+//        ColorOp[1] = disable;
+//        AlphaOp[1] = disable;
     }
 }
 
