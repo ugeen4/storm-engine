@@ -76,7 +76,7 @@ class Fader : public Entity
         float x, y, z, rhw;
         uint32_t color;
         float u, v;
-    } drawbuf_back[6], drawbuf_front[6];
+    } drawbuf_back[6], drawbuf_front[6], drawbuf_tips[6];
 
     bool eventStart;
     bool eventEnd;

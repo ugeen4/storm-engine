@@ -505,6 +505,8 @@ bool DX9RENDER::Init()
 #endif
 
         bShowFps = ini->GetInt(nullptr, "show_fps", 0) == 1;
+		fpsx = ini->GetInt(nullptr, "fps_posx", 0);
+        fpsy = ini->GetInt(nullptr, "fps_posy", 0);
         bShowExInfo = ini->GetInt(nullptr, "show_exinfo", 0) == 1;
         bSafeRendering = ini->GetInt(nullptr, "safe_render", 0) == 0;
         bDropVideoConveyor = ini->GetInt(nullptr, "DropVideoConveyor", 0) != 0;
@@ -1207,7 +1209,7 @@ bool DX9RENDER::DX9EndScene()
 {
     if (bShowFps)
     {
-        Print(screen_size.x - 100, screen_size.y - 50, "FPS %d", core.EngineFps());
+        Print(screen_size.x - fpsx, screen_size.y - fpsy, "FPS %d", core.EngineFps());
     }
 
     if (bShowExInfo)
@@ -1252,7 +1254,7 @@ bool DX9RENDER::DX9EndScene()
     if (bDropVideoConveyor && pDropConveyorVBuffer)
     {
         CVECTOR *pV;
-        pDropConveyorVBuffer->Lock(0, 0, (VOID **)&pV, 0);
+        pDropConveyorVBuffer->Lock(0, 0, (void **)&pV, 0);
         for (int32_t i = 0; i < 2; i++)
             pV[i] = CVECTOR(1e6f, 1e6f, 1e6f);
         pDropConveyorVBuffer->Unlock();
@@ -2179,7 +2181,7 @@ bool DX9RENDER::GetLight(uint32_t dwIndex, D3DLIGHT9 *pLight)
 
 //################################################################################
 
-int32_t DX9RENDER::CreateVertexBuffer(int32_t type, size_t size, uint32_t dwUsage)
+int32_t DX9RENDER::CreateVertexBuffer(int32_t type, size_t size, uint32_t dwUsage, uint32_t dwPool)
 {
     if (size <= 0)
         return -1; // fix
@@ -2192,7 +2194,8 @@ int32_t DX9RENDER::CreateVertexBuffer(int32_t type, size_t size, uint32_t dwUsag
     if (b == MAX_BUFFERS)
         return -1;
 
-    if (CHECKD3DERR(d3d9->CreateVertexBuffer(size, dwUsage, type, D3DPOOL_DEFAULT, &VertexBuffers[b].buff, NULL)))
+    if (CHECKD3DERR(d3d9->CreateVertexBuffer(size, dwUsage, type, static_cast<D3DPOOL>(dwPool),
+                                             &VertexBuffers[b].buff, NULL)))
         return -1;
 
     VertexBuffers[b].type = type;
@@ -2373,7 +2376,7 @@ void DX9RENDER::RenderAnimation(int32_t ib, void *src, int32_t numVrts, int32_t 
         // Copy verteces
         uint8_t *ptr;
         RDTSC_B(_rdtsc);
-        if (CHECKD3DERR(aniVBuffer->Lock(0, size, (VOID **)&ptr, 0)) == true)
+        if (CHECKD3DERR(aniVBuffer->Lock(0, size, (void **)&ptr, 0)) == true)
             return;
         dwNumLV++;
         RDTSC_E(_rdtsc);
@@ -2400,7 +2403,7 @@ void *DX9RENDER::LockVertexBuffer(int32_t id, uint32_t dwFlags)
 {
     uint8_t *ptr;
     VertexBuffers[id].dwNumLocks++;
-    if (CHECKD3DERR(VertexBuffers[id].buff->Lock(0, VertexBuffers[id].size, (VOID **)&ptr, dwFlags)))
+    if (CHECKD3DERR(VertexBuffers[id].buff->Lock(0, VertexBuffers[id].size, (void **)&ptr, dwFlags)))
         return nullptr;
 
     dwNumLV++;
@@ -2423,7 +2426,7 @@ void *DX9RENDER::LockIndexBuffer(int32_t id, uint32_t dwFlags)
 {
     uint8_t *ptr = nullptr;
     IndexBuffers[id].dwNumLocks++;
-    if (CHECKD3DERR(IndexBuffers[id].buff->Lock(0, IndexBuffers[id].size, (VOID **)&ptr, dwFlags)))
+    if (CHECKD3DERR(IndexBuffers[id].buff->Lock(0, IndexBuffers[id].size, (void **)&ptr, dwFlags)))
         return nullptr;
 
     dwNumLI++;
@@ -3429,7 +3432,7 @@ void DX9RENDER::DrawRects(RS_RECT *pRSR, uint32_t dwRectsNum, const char *cBlock
             drawCount = rectsVBuffer_SizeInRects;
         // Buffer
         RECT_VERTEX *data = nullptr;
-        if (rectsVBuffer->Lock(0, drawCount * 6 * sizeof(RECT_VERTEX), (VOID **)&data, D3DLOCK_DISCARD) != D3D_OK)
+        if (rectsVBuffer->Lock(0, drawCount * 6 * sizeof(RECT_VERTEX), (void **)&data, D3DLOCK_DISCARD) != D3D_OK)
             return;
         if (!data)
             return;
@@ -3581,7 +3584,7 @@ HRESULT DX9RENDER::VBLock(IDirect3DVertexBuffer9 *pVB, UINT OffsetToLock, UINT S
                           uint32_t Flags)
 {
     dwNumLV++;
-    return CHECKD3DERR(pVB->Lock(OffsetToLock, SizeToLock, (VOID **)ppbData, Flags));
+    return CHECKD3DERR(pVB->Lock(OffsetToLock, SizeToLock, (void **)ppbData, Flags));
 }
 
 void DX9RENDER::VBUnlock(IDirect3DVertexBuffer9 *pVB)
@@ -3646,7 +3649,7 @@ HRESULT DX9RENDER::SetRenderTarget(IDirect3DSurface9 *pRenderTarget, IDirect3DSu
     return result ? D3D_OK : S_FALSE;
 }
 
-HRESULT DX9RENDER::Clear(uint32_t Count, CONST D3DRECT *pRects, uint32_t Flags, D3DCOLOR Color, float Z,
+HRESULT DX9RENDER::Clear(uint32_t Count, const D3DRECT *pRects, uint32_t Flags, D3DCOLOR Color, float Z,
                          uint32_t Stencil)
 {
     return CHECKD3DERR(d3d9->Clear(Count, pRects, Flags, Color, Z, Stencil));
@@ -3676,7 +3679,7 @@ HRESULT DX9RENDER::EndScene()
     return D3D_OK;
 }
 
-HRESULT DX9RENDER::SetClipPlane(uint32_t Index, CONST float *pPlane)
+HRESULT DX9RENDER::SetClipPlane(uint32_t Index, const float *pPlane)
 {
     // return d3d9->SetClipPlane( Index, pPlane );
     return D3D_OK;
@@ -3707,7 +3710,7 @@ HRESULT DX9RENDER::CreateDepthStencilSurface(UINT Width, UINT Height, D3DFORMAT 
     return CHECKD3DERR(d3d9->CreateDepthStencilSurface(Width, Height, Format, MultiSample, 0, TRUE, ppSurface, NULL));
 }
 
-HRESULT DX9RENDER::CreateVertexDeclaration(CONST D3DVERTEXELEMENT9 *pVertexElements,
+HRESULT DX9RENDER::CreateVertexDeclaration(const D3DVERTEXELEMENT9 *pVertexElements,
                                            IDirect3DVertexDeclaration9 **ppDecl)
 {
     return CHECKD3DERR(d3d9->CreateVertexDeclaration(pVertexElements, ppDecl));
@@ -3718,12 +3721,12 @@ HRESULT DX9RENDER::SetVertexDeclaration(IDirect3DVertexDeclaration9 *pDecl)
     return CHECKD3DERR(d3d9->SetVertexDeclaration(pDecl));
 }
 
-HRESULT DX9RENDER::CreateVertexShader(CONST uint32_t *pFunction, IDirect3DVertexShader9 **ppShader)
+HRESULT DX9RENDER::CreateVertexShader(const uint32_t *pFunction, IDirect3DVertexShader9 **ppShader)
 {
     return CHECKD3DERR(d3d9->CreateVertexShader((const DWORD *)pFunction, ppShader));
 }
 
-HRESULT DX9RENDER::CreatePixelShader(CONST uint32_t *pFunction, IDirect3DPixelShader9 **ppShader)
+HRESULT DX9RENDER::CreatePixelShader(const uint32_t *pFunction, IDirect3DPixelShader9 **ppShader)
 {
     return CHECKD3DERR(d3d9->CreatePixelShader((const DWORD *)pFunction, ppShader));
 }
@@ -3779,12 +3782,12 @@ HRESULT DX9RENDER::GetLevelDesc(IDirect3DCubeTexture9 *ppCubeTexture, UINT Level
 }
 
 HRESULT DX9RENDER::LockRect(IDirect3DCubeTexture9 *ppCubeTexture, D3DCUBEMAP_FACES FaceType, UINT Level,
-                            D3DLOCKED_RECT *pLockedRect, CONST RECT *pRect, uint32_t Flags)
+                            D3DLOCKED_RECT *pLockedRect, const RECT *pRect, uint32_t Flags)
 {
     return CHECKD3DERR(ppCubeTexture->LockRect(FaceType, Level, pLockedRect, pRect, Flags));
 }
 
-HRESULT DX9RENDER::LockRect(IDirect3DTexture9 *ppTexture, UINT Level, D3DLOCKED_RECT *pLockedRect, CONST RECT *pRect,
+HRESULT DX9RENDER::LockRect(IDirect3DTexture9 *ppTexture, UINT Level, D3DLOCKED_RECT *pLockedRect, const RECT *pRect,
                             uint32_t Flags)
 {
     return CHECKD3DERR(ppTexture->LockRect(Level, pLockedRect, pRect, Flags));
@@ -3805,8 +3808,8 @@ HRESULT DX9RENDER::GetSurfaceLevel(IDirect3DTexture9 *ppTexture, UINT Level, IDi
     return CHECKD3DERR(ppTexture->GetSurfaceLevel(Level, ppSurfaceLevel));
 }
 
-HRESULT DX9RENDER::UpdateSurface(IDirect3DSurface9 *pSourceSurface, CONST RECT *pSourceRectsArray, UINT cRects,
-                                 IDirect3DSurface9 *pDestinationSurface, CONST POINT *pDestPointsArray)
+HRESULT DX9RENDER::UpdateSurface(IDirect3DSurface9 *pSourceSurface, const RECT *pSourceRectsArray, UINT cRects,
+                                 IDirect3DSurface9 *pDestinationSurface, const POINT *pDestPointsArray)
 {
     return CHECKD3DERR(D3DXLoadSurfaceFromSurface(pDestinationSurface, nullptr, nullptr, pSourceSurface, nullptr,
                                                   nullptr, D3DX_DEFAULT, 0));
@@ -3872,12 +3875,12 @@ HRESULT DX9RENDER::SetPixelShader(IDirect3DPixelShader9 *pShader)
     return CHECKD3DERR(d3d9->SetPixelShader(pShader));
 }
 
-HRESULT DX9RENDER::SetVertexShaderConstantF(UINT StartRegister, CONST float *pConstantData, UINT Vector4iCount)
+HRESULT DX9RENDER::SetVertexShaderConstantF(UINT StartRegister, const float *pConstantData, UINT Vector4iCount)
 {
     return CHECKD3DERR(d3d9->SetVertexShaderConstantF(StartRegister, pConstantData, Vector4iCount));
 }
 
-HRESULT DX9RENDER::SetPixelShaderConstantF(UINT StartRegister, CONST float *pConstantData, UINT Vector4iCount)
+HRESULT DX9RENDER::SetPixelShaderConstantF(UINT StartRegister, const float *pConstantData, UINT Vector4iCount)
 {
     return CHECKD3DERR(d3d9->SetPixelShaderConstantF(StartRegister, pConstantData, Vector4iCount));
 }
@@ -4224,13 +4227,17 @@ void DX9RENDER::ProgressView()
         float x, y, z, rhw;
         uint32_t color;
         float u, v;
-    } v[4];
+    } v[4], t[4];
     uint32_t i;
     for (i = 0; i < 4; i++)
     {
         v[i].z = 0.5;
         v[i].rhw = 2.0;
         v[i].color = 0xffffffff;
+        
+        t[i].z = 0.5;
+        t[i].rhw = 2.0;
+        t[i].color = 0xffffffff;
     }
     // Calculate the rectangle in which to draw
     D3DVIEWPORT9 vp;
@@ -4264,13 +4271,16 @@ void DX9RENDER::ProgressView()
 
     float dy = 0.0f;
     float dx = ((float(vp.Width) - (4.0f * float(vp.Height) / 3.0f)) / 2.0f);
+    float dxx   = 0.0f;
     if (dx < 10.0f)
         dx = 0.0f;
     else
     {
-        dy = 25.0f;
+        dy = float(vp.Height) * 0.025f;
         dx = ((float(vp.Width) - (4.0f * (float(vp.Height) - 2.0f * dy) / 3.0f)) / 2.0f);
+//        dxx = (float(vp.Width) - 2.0 * dx) * 0.125f;
     }
+    dxx = (float(vp.Width) - 2.0 * dx) * 0.125f;
 
     v[0].x = 0.0f + dx;
     v[0].y = 0.0f + dy;
@@ -4297,28 +4307,49 @@ void DX9RENDER::ProgressView()
     }
     else
     {
-        if (progressTipsTexture >= 0)
-        {
-            TextureSet(1, progressTipsTexture);
-            DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1, 2, v, sizeof(v[0]),
-                            "ProgressBackTechWithTips");
-        }
-        else
-        {
-            DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1, 2, v, sizeof(v[0]),
+        DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1, 2, v, sizeof(v[0]),
                             "ProgressBackTech");
-        }
     }
+    
+    if (progressTipsTexture >= 0)
+    {
+        t[0].x = 0.0f + dx + dxx;
+        t[0].y = 0.0f + 0.787f * float(vp.Height);
+        t[1].x = float(vp.Width) - dx - dxx;
+        t[1].y = 0.0f + 0.787f * float(vp.Height);
+        t[2].x = 0.0f + dx + dxx;
+        t[2].y = float(vp.Height) - 0.094f * float(vp.Height);
+        t[3].x = float(vp.Width) - dx - dxx;
+        t[3].y = float(vp.Height) - 0.094f * float(vp.Height);
+
+        t[0].u = 0.0f;
+        t[0].v = 0.0f;
+        t[1].u = 1.0f;
+        t[1].v = 0.0f;
+        t[2].u = 0.0f;
+        t[2].v = 1.0f;
+        t[3].u = 1.0f;
+        t[3].v = 1.0f;
+        
+        TextureSet(0, progressTipsTexture);
+        DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1, 2, t, sizeof(t[0]),
+                            "ProgressBackTech");
+    }
+    
     if (backTexture < 0)
         for (i = 0; i < 4; i++)
             v[i].color = 0xffffffff;
     // Animated object
     m_fHeightDeformator = ((float)vp.Height * 4.0f) / ((float)vp.Width * 3.0f);
-    // core.Trace(" size_x %f", (vp.Width - dx * 2.0f)*progressFramesWidth);
-    CVECTOR pos((vp.Width - dx * 2.0f) * progressFramesPosX + dx, (vp.Height - dy * 2.0f) * progressFramesPosY + dy,
-                0.0f);
-    CVECTOR size((vp.Width - dx * 2.0f) * progressFramesWidth,
-                 (vp.Height - dy * 2.0f) * progressFramesHeight * 4.0f / 3.0f, 0.0f);
+    
+//    core.Trace(" size_x %f  size_y %f", (vp.Width - dx * 2.0f) * progressFramesWidth, (vp.Height - dy * 2.0f) * progressFramesHeight * 4.0f / 3.0f);
+
+    CVECTOR pos(vp.Width * progressFramesPosX, vp.Height * progressFramesPosY, 0.0f);
+//    CVECTOR size(vp.Width * progressFramesWidth, vp.Width * progressFramesHeight *  4.0f / 3.0f, 0.0f);
+
+//    CVECTOR pos((vp.Width - dx * 2.0f) * progressFramesPosX + dx, (vp.Height - dy * 2.0f) * progressFramesPosY + dy, 0.0f);
+    CVECTOR size((vp.Width - dx * 2.0f) * progressFramesWidth,(vp.Height - dy * 2.0f) * progressFramesHeight * 4.0f / 3.0f, 0.0f);
+                 
     v[0].x = pos.x;
     v[0].y = pos.y;
     v[1].x = pos.x + size.x + 0.5f;

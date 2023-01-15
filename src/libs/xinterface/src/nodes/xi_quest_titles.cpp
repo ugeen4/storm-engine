@@ -367,10 +367,10 @@ void CXI_QUESTTITLE::SetNewTopQuest(ATTRIBUTES *pA, int topNum)
             }
             m_strList[i].dwSpecColor = pAttr->GetAttributeAsDword("color", 0);
             m_strList[i].complete = pAttr->GetAttributeAsDword("Complete", 0) != 0;
-
             const char *pTmpQuestRecordID = pAttr->GetAttribute("LogName");
-            std::string_view quest_record_id = pTmpQuestRecordID ? pTmpQuestRecordID : pAttr->GetThisName();
-            if (ptrOwner->QuestFileReader()->GetQuestTitle(quest_record_id, pAttr->GetThisName(), param))
+            if (!pTmpQuestRecordID)
+                pTmpQuestRecordID = pAttr->GetThisName();
+            if (ptrOwner->QuestFileReader()->GetQuestTitle(pTmpQuestRecordID, pAttr->GetThisName(), param))
             {
                 const size_t titleSize = param.size();
                 if (titleSize == 0)
@@ -410,6 +410,19 @@ float CXI_QUESTTITLE::GetLineStep() const
 
 void CXI_QUESTTITLE::ScrollerChanged(float fPos)
 {
+}
+
+uint32_t CXI_QUESTTITLE::MessageProc(int32_t msgcode, MESSAGE &message)
+{
+    switch (msgcode)
+    {
+    case 0:
+        FONT_RELEASE(m_rs, m_idFont);
+        const std::string &fontName = message.String();
+        m_idFont = m_rs->LoadFont(fontName.c_str());
+        return 0;
+    }
+    return -1;
 }
 
 void CXI_QUESTTITLE::MouseThis(float fX, float fY)

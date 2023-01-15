@@ -176,6 +176,7 @@ void COMPILER::Release()
     SStack.Release();
     EventTab.Release();
     EventMsg.Release();
+    SCodec.Release();
     LibriaryFuncs.clear();
 
     delete[] pDebExpBuffer;
@@ -2581,6 +2582,12 @@ bool COMPILER::CompileBlock(SEGMENT_DESC &Segment, bool &bFunctionBlock, uint32_
             // CompileToken(Segment,EX);
 
             CompileToken(Segment, POP_EXPRESULT); // pop
+
+            if (bound_type == IF_BLOCK)
+            {
+                return true;
+            }
+
             break;
         case ELSE_BLOCK:
             update_offset = Segment.BCode_Program_size + 2;
@@ -2595,7 +2602,8 @@ bool COMPILER::CompileBlock(SEGMENT_DESC &Segment, bool &bFunctionBlock, uint32_
             else
             {
                 Token.StepBack();
-                if (!CompileBlock(Segment, bFunctionBlock, inout, SEPARATOR, continue_jump, break_offset, BreakTable))
+                if (!CompileBlock(Segment, bFunctionBlock, inout, Token_type == IF_BLOCK ? IF_BLOCK : SEPARATOR,
+                                  continue_jump, break_offset, BreakTable))
                     return false;
             }
             memcpy(&Segment.pCode[update_offset], &Segment.BCode_Program_size, sizeof(uint32_t));
@@ -5716,11 +5724,7 @@ bool COMPILER::BC_Execute(uint32_t function_code, DATA *&pVReturnResult, const c
                 else
                     rAP = rAP->GetAttributeClassByCode(*((int32_t *)&pRunCodeBase[TLR_DataOffset]));
                 if (!rAP)
-                {
-                    std::string error_message = fmt::format(
-                        "missed attribute: {}", SCodec.Convert(*((int32_t *)&pRunCodeBase[TLR_DataOffset])));
-                    SetError(error_message.c_str());
-                }
+                    SetError("missed attribute: %s", SCodec.Convert(*((int32_t *)&pRunCodeBase[TLR_DataOffset])));
                 break;
             case VARIABLE:
                 real_var = VarTab.GetVar(*((int32_t *)&pRunCodeBase[TLR_DataOffset]));
@@ -6139,13 +6143,11 @@ ATTRIBUTES *COMPILER::TraceARoot(ATTRIBUTES *pA, const char *&pAccess)
     if (pA->GetThisNameCode() == 0)
         return nullptr; // fix crash at NewGame start
 
-    const std::string_view attr_name = pA->GetThisName();
-    const int32_t slen = attr_name.length() + 1;
+    const int32_t slen = strlen(pA->GetThisName()) + 1;
 
     char *pAS = new char[slen];
 
-    std::copy(std::begin(attr_name), std::end(attr_name), pAS);
-    pAS[slen - 1] = '\0';
+    memcpy(pAS, pA->GetThisName(), slen);
 
     if (pAccess == nullptr)
     {
@@ -7266,42 +7268,38 @@ void COMPILER::PrintoutUsage()
         core.Controls->GetDebugAsyncKeyState(VK_SHIFT) < 0)
     {
         logTrace_->debug("Script Function Time Usage[func name/code(release mode) : ticks]");
-        for (size_t m = 0; m < FuncTab.GetFuncNum(); m++)
+        FuncInfo fi;
+        for (size_t n = 0; n < FuncTab.GetFuncNum(); n++)
         {
-            FuncInfo fi;
-            for (size_t n = 0; n < FuncTab.GetFuncNum(); n++)
+            FuncTab.GetFuncX(fi, n);
+            if (fi.number_of_calls == 0)
             {
-                FuncTab.GetFuncX(fi, n);
-                if (fi.number_of_calls == 0)
-                {
-                    continue;
-                }
-
-                FuncTab.GetFunc(fi, n);
-                if (!fi.name.empty())
-                {
-                    logTrace_->debug("  {}", fi.name);
-                }
-                else
-                {
-                    logTrace_->debug("  {}", n);
-                }
-                logTrace_->debug("  ticks summary  : {}", fi.usage_time);
-                logTrace_->debug("  calls          : {}", fi.number_of_calls);
-                if (fi.number_of_calls != 0)
-                {
-                    logTrace_->debug("  average ticks  : {}", static_cast<float>(fi.usage_time) / fi.number_of_calls);
-                }
-
-                FuncTab.AddTime(n, ~fi.usage_time);
-                logTrace_->debug("");
+                continue;
             }
+
+            FuncTab.GetFunc(fi, n);
+            if (!fi.name.empty())
+            {
+                logTrace_->debug("  {}", fi.name);
+            }
+            else
+            {
+                logTrace_->debug("  {}", n);
+            }
+            logTrace_->debug("  ticks summary  : {}", fi.usage_time);
+            logTrace_->debug("  calls          : {}", fi.number_of_calls);
+            if (fi.number_of_calls != 0)
+            {
+                logTrace_->debug("  average ticks  : {}", static_cast<float>(fi.usage_time) / fi.number_of_calls);
+            }
+            logTrace_->debug("");
         }
+        FuncTab.ResetTimeAndCalls();
 
         logTrace_->debug("Script Run Time Log [sec : ms]");
         for (size_t n = 0; n < nRuntimeLogEventsNum; n++)
         {
-            logTrace_->debug("  %d : %d", n, pRuntimeLogEvent[n]);
+            logTrace_->debug("  {} : {}", n, pRuntimeLogEvent[n]);
         }
     }
 }

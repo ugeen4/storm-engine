@@ -13,6 +13,9 @@ class InfoHandler : public Entity
     void Execute(uint32_t delta_time);
     void Realize(uint32_t delta_time) const;
     uint64_t ProcessMessage(MESSAGE &message) override;
+    
+    static int32_t numberOfTips;
+    static int32_t currentTips;
 
     void ProcessStage(Stage stage, uint32_t delta) override
     {

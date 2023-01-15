@@ -21,6 +21,7 @@ class CXI_QUESTTITLE : public CINODE
     void SaveParametersToIni() override;
 
     void SetNewTopQuest(ATTRIBUTES *pA, int topNum);
+	uint32_t MessageProc(int32_t msgcode, MESSAGE &message) override;
 
     float GetLineStep() const;
     void ScrollerChanged(float fPos);

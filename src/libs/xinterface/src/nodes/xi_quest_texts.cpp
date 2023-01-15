@@ -343,6 +343,9 @@ void CXI_QUESTTEXTS::StartQuestShow(ATTRIBUTES *pA, int qn)
 
     const auto cFlag = pAttr->GetAttributeAsDword("Complete", 0) != 0;
     auto *pATextList = pAttr->GetAttributeClass("Text");
+    const char *questLogName = pAttr->GetAttribute("LogName");
+    if (!questLogName)
+        questLogName = pAttr->GetThisName();
 
     std::vector<std::string> asStringList;
     if (ptrOwner->QuestFileReader() && pATextList)
@@ -433,6 +436,15 @@ uint32_t CXI_QUESTTEXTS::MessageProc(int32_t msgcode, MESSAGE &message)
     case 1: // set the top display line to a relative number
     {
         ScrollerChanged(message.Float());
+        return 0;
+    }
+    break;
+
+    case 2: // set the font id
+    {
+        FONT_RELEASE(m_rs, m_idFont);
+        const std::string &fontName = message.String();
+        m_idFont = m_rs->LoadFont(fontName.c_str());
         return 0;
     }
     break;

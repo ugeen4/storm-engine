@@ -339,6 +339,11 @@ uint64_t SEA_AI::ProcessMessage(MESSAGE &message)
         pAIShip->GetCannonController()->ResearchCannons();
     }
     break;
+	
+	case AI_MESSAGE_CANNONS_RANGE:
+        AIShipCannonController::ColorA = message.Long();
+        AIShipCannonController::ColorR = message.Long();
+    break;
         // boal 08.08.06 method of recounting guns on the ship <--
     case AI_MESSAGE_SEASAVE: //TODO: check these two
     {

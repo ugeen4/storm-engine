@@ -4,6 +4,9 @@
 
 #include "vma.hpp"
 
+int32_t InfoHandler::numberOfTips = 0;
+int32_t InfoHandler::currentTips = -1;
+
 InfoHandler::InfoHandler() : m_rs(nullptr), tex(nullptr)
 {
 }
@@ -140,6 +143,7 @@ bool InfoHandler::DoPreOut()
 
     const char *picTexureFile = AttributesPointer->GetAttribute("picfilename");
     const char *picBackTexureFile = AttributesPointer->GetAttribute("picbackfilename");
+    bool isTips = AttributesPointer ? AttributesPointer->GetAttributeAsDword("tips", 0) : 0;
     const uint32_t TMP_VERTEX_FORMAT = (D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1 | D3DFVF_TEXTUREFORMAT2);
     struct TMP_VERTEX
     {
@@ -228,8 +232,9 @@ bool InfoHandler::DoPreOut()
                 pV[2].tv = 0.f;
                 pV[3].tu = 1.f;
                 pV[3].tv = 1.f;
+
                 m_rs->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, TMP_VERTEX_FORMAT, 2, &pV, sizeof(TMP_VERTEX),
-                                      "iInfoShowerPic");
+                                      "Fader");                      
                 m_rs->TextureRelease(picBackID);
                 m_rs->SetProgressBackImage(picBackTexureFile);
             }
@@ -247,7 +252,7 @@ bool InfoHandler::DoPreOut()
                     dx = 0.0f;
                 else
                 {
-                    dy = 25.0f;
+                    dy = float(desc.Height) * 0.025f;
                     dx = ((float(desc.Width) - (4.0f * (float(desc.Height) - 2.0f * dy) / 3.0f)) / 2.0f);
                 }
 
@@ -269,20 +274,81 @@ bool InfoHandler::DoPreOut()
                 pV[3].tu = 1.f;
                 pV[3].tv = 1.f;
 
-                char _name[MAX_PATH];
-                sprintf(_name, "interfaces\\int_border.tga");
-                int tipsID = m_rs->TextureCreate(_name);
-                if (tipsID)
-                {
-                    m_rs->SetTipsImage(_name);
-                    m_rs->TextureSet(1, tipsID);
-                }
-
                 m_rs->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, TMP_VERTEX_FORMAT, 2, &pV, sizeof(TMP_VERTEX),
-                                      "iInfoShowerPicWithTips");
+                                      "Fader");
+                        
                 m_rs->TextureRelease(picID);
                 m_rs->SetProgressImage(picTexureFile);
             }
+        }
+        
+        if (isTips)
+        {
+            // read the number of tips, if necessary
+            if (!numberOfTips)
+            {
+                auto ini = fio->OpenIniFile(core.EngineIniFileName());
+                if (ini)
+                {
+                    numberOfTips = ini->GetInt(nullptr, "numoftips", -1);
+                }
+                else
+                    numberOfTips = -1;
+                    if (numberOfTips > 9999)
+                        numberOfTips = 9999;
+            }
+            
+            if (numberOfTips > 0)
+            {
+                char tipsTexureFile[MAX_PATH];
+                sprintf_s(tipsTexureFile, "tips\\tips_%.4u.tga", rand() % numberOfTips);
+                const int tipsID = m_rs->TextureCreate(tipsTexureFile);
+                
+                if (tipsID >= 0)
+                {
+                    m_rs->TextureSet(0, tipsID);
+                
+                    float dy    = 0.0f;
+                    float dx    = 0.0f;
+                    float dxx   = 0.0f;
+        
+                    if (((float)desc.Width - (4.0f * (float)desc.Height / 3.0f)) / 2.0f >= 10.0f)
+                    {
+                        dy  = 0.025f * (float)desc.Height;
+                        dx  = ((float)desc.Width - (4.0f * ((float)desc.Height - 2.0f * dy) / 3.0f)) / 2.0f;
+                    }
+                    dxx = ((float)desc.Width - 2.0 * dx) * 0.125f;
+
+                    pV[0].col = pV[1].col = pV[2].col = pV[3].col = 0xFFFFFFFF;
+                                        
+                    pV[0].pos.x = 0.0f + dx + dxx;
+                    pV[0].pos.y = 0.0f + 0.787f * (float)desc.Height;
+                    
+                    pV[1].pos.x = (float)desc.Width - dx - dxx;
+                    pV[1].pos.y = 0.0f + 0.787f * (float)desc.Height;
+                    
+                    pV[2].pos.x = 0.0f + dx + dxx;
+                    pV[2].pos.y = (float)desc.Height - 0.094f * (float)desc.Height;
+                                        
+                    pV[3].pos.x = (float)desc.Width - dx - dxx;
+                    pV[3].pos.y = (float)desc.Height - 0.094f * (float)desc.Height;
+                    
+                    pV[0].tu = 0.f;
+                    pV[0].tv = 0.f;
+                    pV[1].tu = 1.f;
+                    pV[1].tv = 0.f;
+                    pV[2].tu = 0.f;
+                    pV[2].tv = 1.f;
+                    pV[3].tu = 1.f;
+                    pV[3].tv = 1.f;
+                
+                    m_rs->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, TMP_VERTEX_FORMAT, 2, &pV, sizeof(TMP_VERTEX),
+                                      "Fader");                      
+                    m_rs->TextureRelease(tipsID);
+                    m_rs->SetTipsImage(tipsTexureFile);
+                }
+            }
+            
         }
 
         if (inStrStart)

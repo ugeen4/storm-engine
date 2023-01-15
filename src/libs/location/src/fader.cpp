@@ -127,11 +127,12 @@ bool Fader::Init()
         drawbuf_back[i] = {drawbuf_base[i].x, drawbuf_base[i].y, drawbuf_base[i].z, drawbuf_base[i].rhw, {},
                            drawbuf_base[i].u, drawbuf_base[i].v};
         drawbuf_front[i] = drawbuf_back[i];
+        drawbuf_tips[i] = drawbuf_back[i];
     }
 
     if ((w - (4.0f * h / 3.0f)) / 2.0f >= 10.0f)
     {
-        float dy = 25.0f;
+        float dy = 0.025f * h;
         float dx = (w - (4.0f * (h - 2.0f * dy) / 3.0f)) / 2.0f;
 
         drawbuf_front[0].x = 0.0f + dx;
@@ -154,14 +155,13 @@ bool Fader::Init()
         auto ini = fio->OpenIniFile(core.EngineIniFileName());
         if (ini)
         {
-            numberOfTips = ini->GetInt(nullptr, "ProgressFrame", 1);
+            //numberOfTips = ini->GetInt(nullptr, "ProgressFrame", 1);
+            numberOfTips = ini->GetInt(nullptr, "numoftips", -1);
         }
         else
             numberOfTips = -1;
-        if (numberOfTips > 1)
-            numberOfTips = 1;
-        if (numberOfTips < 0)
-            numberOfTips = 0;
+        if (numberOfTips > 9999)
+            numberOfTips = 9999;
     }
     return true;
 }
@@ -215,17 +215,20 @@ uint64_t Fader::ProcessMessage(MESSAGE &message)
         const std::string &_name = message.String();
         textureID = rs->TextureCreate(_name.c_str());
         rs->SetProgressImage(_name.c_str());
+              
         // Hint texture
         if (numberOfTips > 0)
         {
-            const std::string texturePath = "interfaces\\int_border.tga";
+            char _name[MAX_PATH];
+            sprintf_s(_name, "tips\\tips_%.4u.tga", rand() % numberOfTips);
             if (tipsID >= 0)
             {
                 rs->TextureRelease(tipsID);
             }
-            tipsID = rs->TextureCreate(texturePath.c_str());
-            rs->SetTipsImage(texturePath.c_str());
+            tipsID = rs->TextureCreate(_name);
+            rs->SetTipsImage(_name);
         }
+        
         break;
     }
     case FADER_PICTURE0: {
@@ -233,22 +236,7 @@ uint64_t Fader::ProcessMessage(MESSAGE &message)
             rs->TextureRelease(textureBackID);
         const std::string &_name = message.String();
         textureBackID = rs->TextureCreate(_name.c_str());
-        rs->SetProgressBackImage(_name.c_str());
-        // Hint texture
-        if (numberOfTips > 0)
-        {
-            // sprintf_s(_name, "tips\\tips_%.4u.tga", rand() % numberOfTips);
-            auto *const pTipsName = rs->GetTipsImage();
-            if (pTipsName)
-            {
-                if (tipsID >= 0)
-                {
-                    rs->TextureRelease(tipsID);
-                }
-                tipsID = rs->TextureCreate(pTipsName);
-                // rs->SetTipsImage(_name);
-            }
-        }
+        rs->SetProgressBackImage(_name.c_str());        
         break;
     }
     }
@@ -258,7 +246,7 @@ uint64_t Fader::ProcessMessage(MESSAGE &message)
 // Work
 void Fader::Execute(uint32_t delta_time)
 {
-    // core.Trace("fader frame");
+//    core.Trace("fader frame");
     if (deleteMe)
     {
         deleteMe++;
@@ -271,12 +259,12 @@ void Fader::Execute(uint32_t delta_time)
         if (!fadeIn)
         {
             core.PostEvent("FaderEvent_StartFade", 0, "li", fadeIn, GetId());
-            // core.Trace("FaderEvent_StartFade");
+//            core.Trace("FaderEvent_StartFade");
         }
         else
         {
             core.PostEvent("FaderEvent_StartFadeIn", 0, "li", fadeIn, GetId());
-            //    core.Trace("FaderEvent_StartFadeIn");
+//            core.Trace("FaderEvent_StartFadeIn");
         }
     }
     if (eventEnd)
@@ -286,12 +274,12 @@ void Fader::Execute(uint32_t delta_time)
         if (!fadeIn)
         {
             core.PostEvent("FaderEvent_EndFade", 0, "li", fadeIn, GetId());
-            // core.Trace("FaderEvent_EndFade");
+//            core.Trace("FaderEvent_EndFade");
         }
         else
         {
             core.PostEvent("FaderEvent_EndFadeIn", 0, "li", fadeIn, GetId());
-            //    core.Trace("FaderEvent_EndFadeIn");
+//            core.Trace("FaderEvent_EndFadeIn");
         }
     }
 }
@@ -315,7 +303,8 @@ void Fader::Realize(uint32_t delta_time)
                     core.Trace("Fader: GetRenderTargetAsTexture failed");
                 }
             }
-            else {
+            else 
+            {
                 rs->SetTexture(0, tex);
                 rs->DrawPrimitiveUP(D3DPT_TRIANGLELIST,
                                     D3DFVF_XYZRHW  | D3DFVF_TEX1 | D3DFVF_TEXTUREFORMAT2, 2, drawbuf_base, sizeof(drawbuf_base[0]), "Fader");
@@ -360,19 +349,49 @@ void Fader::Realize(uint32_t delta_time)
         drawbuf_front[5].color = color;
 
         rs->TextureSet(0, textureID);
-        if (tipsID >= 0)
-        {
-            rs->TextureSet(1, tipsID);
-            rs->DrawPrimitiveUP(D3DPT_TRIANGLELIST,
-                                D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1 | D3DFVF_TEXTUREFORMAT2, 2, drawbuf_front,
-                                sizeof(drawbuf_front[0]), "FaderWithTips");
-        }
-        else
-        {
-            rs->DrawPrimitiveUP(D3DPT_TRIANGLELIST,
+        rs->DrawPrimitiveUP(D3DPT_TRIANGLELIST,
                                 D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1 | D3DFVF_TEXTUREFORMAT2, 2, drawbuf_front,
                                 sizeof(drawbuf_front[0]), "Fader");
+    }
+    
+    if (tipsID >= 0)
+    {
+        drawbuf_tips[0].color = color;
+        drawbuf_tips[1].color = color;
+        drawbuf_tips[2].color = color;
+        drawbuf_tips[3].color = color;
+        drawbuf_tips[4].color = color;
+        drawbuf_tips[5].color = color;
+        
+        float dy    = 0.0f;
+        float dx    = 0.0f;
+        float dxx   = 0.0;
+        
+        if ((w - (4.0f * h / 3.0f)) / 2.0f >= 10.0f)
+        {
+            dy  = 0.025f * h;
+            dx  = (w - (4.0f * (h - 2.0f * dy) / 3.0f)) / 2.0f;
+//            dxx = (w - 2.0 * dx) * 0.125f;
         }
+        dxx = (w - 2.0 * dx) * 0.125f;
+
+        drawbuf_tips[0].x = 0.0f + dx + dxx;
+        drawbuf_tips[0].y = 0.0f + 0.787f * h;
+        drawbuf_tips[1].x = w - dx - dxx;
+        drawbuf_tips[1].y = 0.0f + 0.787f * h;
+        drawbuf_tips[2].x = 0.0f + dx + dxx;
+        drawbuf_tips[2].y = h - 0.094f * h;
+        drawbuf_tips[3].x = 0.0f + dx + dxx;
+        drawbuf_tips[3].y = h - 0.094f * h;
+        drawbuf_tips[4].x = w - dx - dxx;
+        drawbuf_tips[4].y = 0.0f + 0.787f * h;
+        drawbuf_tips[5].x = w - dx - dxx;
+        drawbuf_tips[5].y = h - 0.094f * h;
+
+        rs->TextureSet(0, tipsID);
+        rs->DrawPrimitiveUP(D3DPT_TRIANGLELIST,
+                                D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1 | D3DFVF_TEXTUREFORMAT2, 2, drawbuf_tips,
+                                sizeof(drawbuf_tips[0]), "Fader");
     }
 
     // Increase alpha

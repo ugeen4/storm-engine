@@ -709,7 +709,7 @@ DATA *COMPILER::BC_CallIntFunction(uint32_t func_code, DATA *&pVResult, uint32_t
         pV2->SetType(VAR_AREFERENCE);
         pV2->SetAReference(core_internal.Entity_GetAttributePointer(ent));
 
-        if (core.GetEntityPointer(ent))
+        if (core.IsEntityValid(ent))
             TempLong1 = 1;
         else
             TempLong1 = 0;
@@ -754,7 +754,7 @@ DATA *COMPILER::BC_CallIntFunction(uint32_t func_code, DATA *&pVResult, uint32_t
         pV2->SetType(VAR_AREFERENCE);
         pV2->SetAReference(core_internal.Entity_GetAttributePointer(ent));
 
-        if (core.GetEntityPointer(ent))
+        if (core.IsEntityValid(ent))
             TempLong1 = 1;
         else
             TempLong1 = 0;
@@ -786,7 +786,7 @@ DATA *COMPILER::BC_CallIntFunction(uint32_t func_code, DATA *&pVResult, uint32_t
         pV2->SetType(VAR_AREFERENCE);
         pV2->SetAReference(core_internal.Entity_GetAttributePointer(ent));
 
-        if (core.GetEntityPointer(ent))
+        if (core.IsEntityValid(ent))
             TempLong1 = 1;
         else
             TempLong1 = 0;
@@ -1511,7 +1511,7 @@ DATA *COMPILER::BC_CallIntFunction(uint32_t func_code, DATA *&pVResult, uint32_t
         pV = pV->GetVarPointer();
         pV->Get(TempEid);
         pV = SStack.Push();
-        if (core.GetEntityPointer(TempEid) != nullptr)
+        if (core.IsEntityValid(TempEid))
             TempLong1 = 1;
         else
             TempLong1 = 0;
@@ -1859,7 +1859,7 @@ DATA *COMPILER::BC_CallIntFunction(uint32_t func_code, DATA *&pVResult, uint32_t
         CreateMessage(&ms, s_off, 1);
 
         uint64_t mresult = 0;
-        pE = core.GetEntityPointer(ent);
+        pE = core.GetEntityPointerSafe(ent);
         if (pE)
         {
             ms.Move2Start();
@@ -2452,16 +2452,11 @@ DATA *COMPILER::BC_CallIntFunction(uint32_t func_code, DATA *&pVResult, uint32_t
         }
         pA = pV->GetAClass();
         if (pA)
-        {
-            const auto attr_name = std::string(pA->GetThisName());
-            pV = SStack.Push();
-            pV->Set(attr_name.c_str());
-        }
+            pChar = pA->GetThisName();
         else
-        {
-            pV = SStack.Push();
-            pV->Set("AClass ERROR n1");
-        }
+            pChar = "AClass ERROR n1";
+        pV = SStack.Push();
+        pV->Set(pChar);
         pVResult = pV;
         return pV;
     case FUNC_DUMP_ATTRIBUTES:
@@ -2571,7 +2566,7 @@ DATA *COMPILER::BC_CallIntFunction(uint32_t func_code, DATA *&pVResult, uint32_t
 
         std::sort(std::execution::seq, std::begin(pA->attributes_), std::end(pA->attributes_),
                   [](const std::unique_ptr<ATTRIBUTES> &lhs, const std::unique_ptr<ATTRIBUTES> &rhs) {
-                      return lhs->GetThisName().compare(rhs->GetThisName()) < 0;
+                      return strcmp(lhs->GetThisName(), rhs->GetThisName()) < 0;
                   });
 
         break;
@@ -2593,9 +2588,7 @@ void COMPILER::DumpAttributes(ATTRIBUTES *pA, int32_t level)
 
     for (uint32_t n = 0; n < pA->GetAttributesNum(); n++)
     {
-        const auto attr_name = std::string(pA->GetAttributeName(n));
-        const auto attr_value = to_string(pA->GetAttribute(n));
-        DTrace("%s%s = %s", buffer, attr_name.c_str(), attr_value.c_str());
+        DTrace("%s%s = %s", buffer, pA->GetAttributeName(n), static_cast<const char*>(pA->GetAttribute(n)));
         DumpAttributes(pA->GetAttributeClass(pA->GetAttributeName(n)), level + 2);
     }
 }

@@ -7,6 +7,9 @@
 float AIShipCannonController::fMaxCannonDamageDistance = 1.0f;
 float AIShipCannonController::fMaxCannonDamageRadiusPoint = 1.0f;
 
+int AIShipCannonController::ColorA = 0;
+int AIShipCannonController::ColorR = 0;
+
 AIShipCannonController::AIShipCannonController(AIShip *_pShip) : bReload(false), bNotEnoughBalls(false)
 {
     SetAIShip(_pShip);
@@ -561,11 +564,8 @@ void AIShipCannonController::Realize(float fDeltaTime)
         std::this_thread::sleep_for(100ms);
     }
 
-    if (!debugDrawToggle)
+    if (debugDrawToggle)
     {
-        return;
-    }
-
     for (auto it = debugFirePositions.begin(); it != debugFirePositions.end();)
     {
         constexpr auto kDebugFadeTime = 3.0f;
@@ -630,6 +630,7 @@ void AIShipCannonController::Realize(float fDeltaTime)
         }
         AIHelper::pRS->Print(200, 20, buf.c_str());
     }
+	}
 
     struct tr_vertex
     {
@@ -646,6 +647,8 @@ void AIShipCannonController::Realize(float fDeltaTime)
     const CVECTOR vPosTemp = GetAIShip()->GetPos();
     for (const auto &bort : aShipBorts)
     {
+		if(!GetAIShip()->isMainCharacter() && !debugDrawToggle) continue;
+		if(bort.isBortDamaged()) continue;
         if (!bort.aCannons.empty())
         {
             // calc fire range
@@ -672,10 +675,11 @@ void AIShipCannonController::Realize(float fDeltaTime)
                 RotateAroundY(v[2].x, v[2].z, vZ.z, vZ.x);
                 v[2] += v[0];
 
-                constexpr auto color = ARGB(0x0F, 0x90, 0xEE, 0x90);
-                Verts.emplace_back(tr_vertex{v[0], color});
-                Verts.emplace_back(tr_vertex{v[1], color});
-                Verts.emplace_back(tr_vertex{v[2], color});
+				if(debugDrawToggle) ColorA = ColorR = ARGB(0x0F, 0x90, 0xEE, 0x90);
+				
+                Verts.emplace_back(tr_vertex{v[0], static_cast<uint32_t>(ColorA)});
+                Verts.emplace_back(tr_vertex{v[1], static_cast<uint32_t>(ColorR)});
+                Verts.emplace_back(tr_vertex{v[2], static_cast<uint32_t>(ColorR)});
             }
         }
     }

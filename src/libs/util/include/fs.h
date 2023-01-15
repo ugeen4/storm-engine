@@ -22,11 +22,11 @@ inline path GetStashPath()
         wchar_t *str = nullptr;
         SHGetKnownFolderPath(FOLDERID_Documents, KF_FLAG_SIMPLE_IDLIST, nullptr, &str);
         path = str;
-        path = path / "My Games" / "Sea Dogs";
+        path = path / "My Games" / "Caribbean Legend";
         CoTaskMemFree(str);
 #else
         char *pref_path = nullptr;
-        pref_path = SDL_GetPrefPath("Akella", "Sea Dogs");
+        pref_path = SDL_GetPrefPath("BlackMark Studio", "Carribean Legend");
         path = pref_path;
 #endif
     }

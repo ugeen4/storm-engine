@@ -1,4 +1,4 @@
-#include "utils.h"
+#include "bi_utils.h"
 
 #include "core.h"
 #include "string_compare.hpp"
@@ -73,26 +73,32 @@ int32_t BIUtils::GetTextureFromAttr(VDX9RENDER *rs, ATTRIBUTES *pA, const char *
     return rs->TextureCreate(sname);
 }
 
-bool BIUtils::ReadRectFromAttr(ATTRIBUTES *pA, const std::string_view &name, FRECT &rOut, FRECT &rDefault)
+bool BIUtils::ReadRectFromAttr(ATTRIBUTES *pA, const char *name, FRECT &rOut, FRECT &rDefault)
 {
     rOut = rDefault;
-    if (pA)
+    if (pA && name)
     {
-        const std::string str_value = pA->GetAttribute(name);
-        sscanf(str_value.c_str(), "%f,%f,%f,%f", &rOut.left, &rOut.top, &rOut.right, &rOut.bottom);
-        return true;
+        const char *pcStr = pA->GetAttribute(name);
+        if (pcStr)
+        {
+            sscanf(pcStr, "%f,%f,%f,%f", &rOut.left, &rOut.top, &rOut.right, &rOut.bottom);
+            return true;
+        }
     }
     return false;
 }
 
-bool BIUtils::ReadRectFromAttr(ATTRIBUTES *pA, const std::string_view &name, RECT &rOut, RECT &rDefault)
+bool BIUtils::ReadRectFromAttr(ATTRIBUTES *pA, const char *name, RECT &rOut, RECT &rDefault)
 {
     rOut = rDefault;
-    if (pA)
+    if (pA && name)
     {
-        const std::string str_value = pA->GetAttribute(name);
-        sscanf(str_value.c_str(), "%d,%d,%d,%d", &rOut.left, &rOut.top, &rOut.right, &rOut.bottom);
-        return true;
+        const char *pcStr = pA->GetAttribute(name);
+        if (pcStr)
+        {
+            sscanf(pcStr, "%d,%d,%d,%d", &rOut.left, &rOut.top, &rOut.right, &rOut.bottom);
+            return true;
+        }
     }
     return false;
 }
@@ -362,6 +368,17 @@ void BITextInfo::Print()
         {
             const char *textAttr = pARefresh->GetAttribute("text");
             sText = textAttr ? textAttr : "";
+			dwColor = pARefresh->GetAttributeAsDword("color", 0xFFFFFFFF);
+			ATTRIBUTES *pAttr = pARefresh->GetAttributeClass("pos");
+			if (pAttr)
+			{
+				pos.x = pAttr->GetAttributeAsDword("x", 0);
+				pos.y = pAttr->GetAttributeAsDword("y", 0);
+			}
+			else
+			{
+				pos.x = pos.y = 0;
+			}
         }
         if (!sText.empty())
             pRS->ExtPrint(nFont, dwColor, 0, PR_ALIGN_CENTER, bShadow, fScale, 0, 0, pos.x, pos.y, "%s", sText.c_str());
