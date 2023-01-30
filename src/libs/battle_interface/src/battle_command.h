@@ -116,6 +116,7 @@ class BICommandList
     IPOINT m_pntUpDownArrowSize;
     IPOINT m_pntUpArrowOffset;
     IPOINT m_pntDownArrowOffset;
+    IPOINT m_pntDownArrowOffset0;
 
     bool m_bLeftArrow;
     bool m_bRightArrow;

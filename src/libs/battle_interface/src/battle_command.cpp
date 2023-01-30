@@ -229,6 +229,9 @@ void BICommandList::Init()
     FULLRECT(m_frDownArrowUV);
     m_pntUpArrowOffset.x = 32;
     m_pntUpArrowOffset.y = -34;
+	
+	m_pntDownArrowOffset0.x = 32;
+    m_pntDownArrowOffset0.y = 66;
     m_pntDownArrowOffset.x = 32;
     m_pntDownArrowOffset.y = 66;
 
@@ -280,8 +283,10 @@ void BICommandList::Init()
                                  m_pntUpDownArrowSize.x, m_pntUpDownArrowSize.y);
         BIUtils::ReadPosFromAttr(pAList, "UDArrow_Offset_Up", m_pntUpArrowOffset.x, m_pntUpArrowOffset.y,
                                  m_pntUpArrowOffset.x, m_pntUpArrowOffset.y);
-        BIUtils::ReadPosFromAttr(pAList, "UDArrow_Offset_Down", m_pntDownArrowOffset.x, m_pntDownArrowOffset.y,
+		BIUtils::ReadPosFromAttr(pAList, "UDArrow_Offset_Down", m_pntDownArrowOffset.x, m_pntDownArrowOffset.y,
                                  m_pntDownArrowOffset.x, m_pntDownArrowOffset.y);
+        BIUtils::ReadPosFromAttr(pAList, "UDArrow_Offset_Down0", m_pntDownArrowOffset0.x, m_pntDownArrowOffset0.y,
+                                 m_pntDownArrowOffset0.x, m_pntDownArrowOffset0.y);
 
         if (attr = pAList->GetAttribute("LRArrow_Texture"))
             m_sLeftRightArrowTexture = attr;
@@ -553,8 +558,8 @@ void BICommandList::UpdateShowIcon()
     }
     if (m_bDownArrow)
     {
-        rPos.left = m_LeftTopPoint.x + m_pntDownArrowOffset.x;
-        rPos.top = m_LeftTopPoint.y + m_pntDownArrowOffset.y;
+        rPos.left = m_bUpArrow ? m_LeftTopPoint.x + m_pntDownArrowOffset.x : m_LeftTopPoint.x + m_pntDownArrowOffset0.x;
+        rPos.top =  m_bUpArrow ? m_LeftTopPoint.y + m_pntDownArrowOffset.y : m_LeftTopPoint.y + m_pntDownArrowOffset0.y;
         rPos.right = rPos.left + m_pntUpDownArrowSize.x;
         rPos.bottom = rPos.top + m_pntUpDownArrowSize.y;
         m_pImgRender->CreateImage(BIType_square, m_sUpDownArrowTexture.c_str(), 0xFF808080, m_frDownArrowUV, rPos);
