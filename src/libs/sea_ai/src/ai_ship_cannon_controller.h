@@ -151,7 +151,8 @@ class AIShipCannonController
     static float fMaxCannonDamageDistance;
     static float fMaxCannonDamageRadiusPoint;
 
-	static int ColorA, ColorR;
+	static int ColorA, ColorR, ColorNA, ColorNR;
+	static bool bShowCannonsRange;
 	
     void Save(CSaveLoad *pSL);
     void Load(CSaveLoad *pSL);

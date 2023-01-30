@@ -9,6 +9,9 @@ float AIShipCannonController::fMaxCannonDamageRadiusPoint = 1.0f;
 
 int AIShipCannonController::ColorA = 0;
 int AIShipCannonController::ColorR = 0;
+int AIShipCannonController::ColorNA = 0;
+int AIShipCannonController::ColorNR = 0;
+bool AIShipCannonController::bShowCannonsRange = true;
 
 AIShipCannonController::AIShipCannonController(AIShip *_pShip) : bReload(false), bNotEnoughBalls(false)
 {
@@ -563,75 +566,77 @@ void AIShipCannonController::Realize(float fDeltaTime)
         debugDrawToggle = !debugDrawToggle;
         std::this_thread::sleep_for(100ms);
     }
-
+	
+	if(!bShowCannonsRange) return;
+	
     if (debugDrawToggle)
     {
-    for (auto it = debugFirePositions.begin(); it != debugFirePositions.end();)
-    {
-        constexpr auto kDebugFadeTime = 3.0f;
-        if (auto &[pos, color, dt] = *it; dt <= kDebugFadeTime)
-        {
-            dt += fDeltaTime;
+		for (auto it = debugFirePositions.begin(); it != debugFirePositions.end();)
+		{
+			constexpr auto kDebugFadeTime = 3.0f;
+			if (auto &[pos, color, dt] = *it; dt <= kDebugFadeTime)
+			{
+				dt += fDeltaTime;
 
-            CVECTOR cPos;
-            CVECTOR cAng;
-            float cFov;
-            AIHelper::pRS->GetCamera(cPos, cAng, cFov);
+				CVECTOR cPos;
+				CVECTOR cAng;
+				float cFov;
+				AIHelper::pRS->GetCamera(cPos, cAng, cFov);
 
-            const auto dist = (pos - cPos).GetLength();
+				const auto dist = (pos - cPos).GetLength();
 
-            float radius = 0.3f;
-            if (dist > 1.0f)
-            {
-                radius *= sqrtf(dist);
-            }
-            AIHelper::pRS->DrawSphere(pos, radius, color);
-            ++it;
-        }
-        else
-        {
-            it = debugFirePositions.erase(it);
-        }
-    }
+				float radius = 0.3f;
+				if (dist > 1.0f)
+				{
+					radius *= sqrtf(dist);
+				}
+				AIHelper::pRS->DrawSphere(pos, radius, color);
+				++it;
+			}
+			else
+			{
+				it = debugFirePositions.erase(it);
+			}
+		}
 
-    static std::vector<RS_LINE> Lines;
-    Lines.clear();
+		static std::vector<RS_LINE> Lines;
+		Lines.clear();
 
-    for (const auto &bort : aShipBorts)
-    {
-        for (const auto &cannon : bort.aCannons)
-        {
-            if (!cannon.isDamaged())
-            {
-                constexpr auto red = ARGB(0xFF, 0xDC, 0x14, 0x3C);
-                constexpr auto green = ARGB(0xFF, 0x7C, 0xFC, 0x00);
+		for (const auto &bort : aShipBorts)
+		{
+			for (const auto &cannon : bort.aCannons)
+			{
+				if (!cannon.isDamaged())
+				{
+					constexpr auto red = ARGB(0xFF, 0xDC, 0x14, 0x3C);
+					constexpr auto green = ARGB(0xFF, 0x7C, 0xFC, 0x00);
 
-                const auto &&vPos = cannon.GetPos();
-                Lines.emplace_back(RS_LINE{vPos, red});
-                Lines.emplace_back(RS_LINE{vPos + 5.0f * cannon.GetDir(), red});
-                Lines.emplace_back(RS_LINE{vPos, green});
-                Lines.emplace_back(RS_LINE{vPos + CVECTOR{0.0f, cannon.GetDirY(), 0.0f}, green});
-            }
-        }
-    }
+					const auto &&vPos = cannon.GetPos();
+					Lines.emplace_back(RS_LINE{vPos, red});
+					Lines.emplace_back(RS_LINE{vPos + 5.0f * cannon.GetDir(), red});
+					Lines.emplace_back(RS_LINE{vPos, green});
+					Lines.emplace_back(RS_LINE{vPos + CVECTOR{0.0f, cannon.GetDirY(), 0.0f}, green});
+				}
+			}
+		}
 
-    if (!Lines.empty())
-    {
-        AIHelper::pRS->SetTransform(D3DTS_WORLD, CMatrix());
-        AIHelper::pRS->DrawLines(Lines.data(), Lines.size() / 2, "Line");
-    }
+		if (!Lines.empty())
+		{
+			AIHelper::pRS->SetTransform(D3DTS_WORLD, CMatrix());
+			AIHelper::pRS->DrawLines(Lines.data(), Lines.size() / 2, "Line");
+		}
 
-    if (GetAIShip()->isMainCharacter())
-    {
-        std::string buf;
-        for (const auto &bort : aShipBorts)
-        {
-            buf += fmt::format("{:.3f} ", GetBortHeightAngle(bort));
-        }
-        AIHelper::pRS->Print(200, 20, buf.c_str());
-    }
+		if (GetAIShip()->isMainCharacter())
+		{
+			std::string buf;
+			for (const auto &bort : aShipBorts)
+			{
+				buf += fmt::format("{:.3f} ", GetBortHeightAngle(bort));
+			}
+			AIHelper::pRS->Print(200, 20, buf.c_str());
+		}
 	}
-
+	
     struct tr_vertex
     {
         CVECTOR vPos;
@@ -675,11 +680,11 @@ void AIShipCannonController::Realize(float fDeltaTime)
                 RotateAroundY(v[2].x, v[2].z, vZ.z, vZ.x);
                 v[2] += v[0];
 
-				if(debugDrawToggle) ColorA = ColorR = ARGB(0x0F, 0x90, 0xEE, 0x90);
+				if(debugDrawToggle) ColorA = ColorR = ColorNA = ColorNR = ARGB(0x0F, 0x90, 0xEE, 0x90);
 				
-                Verts.emplace_back(tr_vertex{v[0], static_cast<uint32_t>(ColorA)});
-                Verts.emplace_back(tr_vertex{v[1], static_cast<uint32_t>(ColorR)});
-                Verts.emplace_back(tr_vertex{v[2], static_cast<uint32_t>(ColorR)});
+                Verts.emplace_back(tr_vertex{v[0], bort.isCharged() ? static_cast<uint32_t>(ColorA) : static_cast<uint32_t>(ColorNA)});
+                Verts.emplace_back(tr_vertex{v[1], bort.isCharged() ? static_cast<uint32_t>(ColorR) : static_cast<uint32_t>(ColorNR)});
+				Verts.emplace_back(tr_vertex{v[2], bort.isCharged() ? static_cast<uint32_t>(ColorR) : static_cast<uint32_t>(ColorNR)});																													   
             }
         }
     }
