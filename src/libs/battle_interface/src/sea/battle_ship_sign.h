@@ -68,6 +68,8 @@ class BIShipIcon
     float GetProgressShipSP(int32_t nShipNum);
     float GetProgressShipClass(int32_t nShipNum);
     void GetShipUVFromPictureIndex(int32_t nPicIndex, FRECT &rUV);
+	//belamour
+    void GetShipClassUVFromPictureIndex(int32_t nPicIndex, FRECT &ShipClassUV);
 
     int32_t GetShipClass(int32_t nCharIdx);
 
@@ -77,29 +79,54 @@ class BIShipIcon
     int32_t m_nIBufID;
 
     int32_t m_nMaxSquareQ;
-
-    int32_t m_nBackTextureID;
+	// belamour
+    int32_t m_nBackMCTextureID;
+    int32_t m_nBackMCSquareQ;
+    uint32_t m_dwBackMCColor;
+    FRECT m_rBackMCUV;
+    BIFPOINT m_pntBackMCOffset;
+    FPOINT m_pntBackMCIconSize;
+	
+	int32_t m_nBackTextureID;
     int32_t m_nBackSquareQ;
     uint32_t m_dwBackColor;
     FRECT m_rBackUV;
     BIFPOINT m_pntBackOffset;
     FPOINT m_pntBackIconSize;
+	
+	int32_t m_nShipStateBackTextureID;
+    int32_t m_nShipStateBackSquareQ;
+    uint32_t m_dwShipStateBackColor;
+    FRECT m_rShipStateBackUV;
+    BIFPOINT m_pntShipStateBackOffset;
+    FPOINT m_pntShipStateBackIconSize;
 
+	int32_t m_nShipStateMCTextureID;
     int32_t m_nShipStateTextureID;
+    int32_t m_nMCShipStateSquareQ;
     int32_t m_nShipStateSquareQ;
+    uint32_t m_dwShipStateMCColor;
     uint32_t m_dwShipStateColor;
+    FRECT m_rShipHPMCUV;
     FRECT m_rShipHPUV;
     BIFPOINT m_pntShipHPOffset;
+    BIFPOINT m_pntShipHPMCOffset;
+    FPOINT m_pntShipHPMCIconSize;
     FPOINT m_pntShipHPIconSize;
+    FRECT m_rShipSPMCUV;
     FRECT m_rShipSPUV;
+    BIFPOINT m_pntShipSPMCOffset;
     BIFPOINT m_pntShipSPOffset;
+    FPOINT m_pntShipSPMCIconSize;
     FPOINT m_pntShipSPIconSize;
 
     int32_t m_nShipClassTextureID;
     int32_t m_nShipClassSquareQ;
     uint32_t m_dwShipClassColor;
     FRECT m_rShipClassUV;
+    BIFPOINT m_pntMCShipClassOffset;
     BIFPOINT m_pntShipClassOffset;
+    FPOINT m_pntMCShipClassIconSize;
     FPOINT m_pntShipClassIconSize;
     std::vector<float> m_aClassProgress;
 
@@ -108,6 +135,7 @@ class BIShipIcon
     uint32_t m_dwShipColor;
     // FRECT m_rShipUV;
     BIFPOINT m_pntShipOffset;
+    FPOINT m_pntMCShipIconSize;
     FPOINT m_pntShipIconSize;
     uint32_t m_dwShipNCols;
     uint32_t m_dwShipNRows;
@@ -123,20 +151,28 @@ class BIShipIcon
         FRECT rUV;
         std::string sShipName;
         int32_t nShipClass;
+		//belamour
+		FRECT ShipClassUV;
     } m_Ship[MAX_SHIP_QUANTITY];
 
     int32_t m_nShipQuantity;
     int32_t m_nCurrentShipIndex;
     int32_t m_nCommandListVerticalOffset;
+    int32_t m_nCommandListVerticalOffsetMC;
 
     int32_t m_idSailorFont;
     uint32_t m_dwSailorFontColor;
     float m_fSailorFontScale;
     POINT m_SailorFontOffset;
+	float m_fMCSailorFontScale;
+    POINT m_MCSailorFontOffset;
 
     int32_t m_idShipNameFont;
+    uint32_t m_dwShipNameFontColorMC;
     uint32_t m_dwShipNameFontColor;
+    float m_fShipNameFontScaleMC;
     float m_fShipNameFontScale;
+    POINT m_ShipNameFontOffsetMC;
     POINT m_ShipNameFontOffset;
 
     bool m_bMakeUpdate;

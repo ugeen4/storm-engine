@@ -17,11 +17,16 @@ BIShipIcon::BIShipIcon(entid_t BIEntityID, VDX9RENDER *pRS)
 
     m_nVBufID = -1;
     m_nIBufID = -1;
+    m_nBackMCTextureID = -1;
     m_nBackTextureID = -1;
+    m_nShipStateBackTextureID = -1;
     m_nShipTextureID = -1;
     m_nShipStateTextureID = -1;
+	m_nShipStateMCTextureID = -1;							 
     m_nShipClassTextureID = -1;
     m_nBackSquareQ = 0;
+    m_nShipStateBackSquareQ = 0;
+    m_nBackMCSquareQ = 0;
     m_nShipSquareQ = 0;
     m_nShipStateSquareQ = 0;
     m_nShipClassSquareQ = 0;
@@ -73,8 +78,24 @@ void BIShipIcon::Draw()
                               m_nShipSquareQ * 2, "battle_colorRectangle");
         }
         nStartV += m_nShipSquareQ * 4;
-
+		
+		if (m_nShipStateBackSquareQ > 0)
+        {
+            m_pRS->TextureSet(0, m_nShipStateBackTextureID);
+            m_pRS->DrawBuffer(m_nVBufID, sizeof(BI_COLOR_VERTEX), m_nIBufID, nStartV, m_nShipStateBackSquareQ * 4, nStartI,
+                              m_nShipStateBackSquareQ * 2, "battle_colorRectangle");
+        }
+        nStartV += m_nShipStateBackSquareQ * 4;
+		
         // back
+		if (m_nBackMCSquareQ > 0)
+        {
+            m_pRS->TextureSet(0, m_nBackMCTextureID);
+            m_pRS->DrawBuffer(m_nVBufID, sizeof(BI_COLOR_VERTEX), m_nIBufID, nStartV, m_nBackMCSquareQ * 4, nStartI,
+                              m_nBackMCSquareQ * 2, "battle_colorRectangle");
+        }
+        nStartV += m_nBackMCSquareQ * 4;
+		
         if (m_nBackSquareQ > 0)
         {
             m_pRS->TextureSet(0, m_nBackTextureID);
@@ -82,10 +103,21 @@ void BIShipIcon::Draw()
                               m_nBackSquareQ * 2, "battle_colorRectangle");
         }
         nStartV += m_nBackSquareQ * 4;
+		
+		
 
         // ship state (hp & sp)
-        if (m_nShipStateSquareQ > 0)
+        if (m_nMCShipStateSquareQ > 0)
         {
+			// MC ship state (hp & sp)
+        
+            m_pRS->TextureSet(0, m_nShipStateMCTextureID);
+            m_pRS->DrawBuffer(m_nVBufID, sizeof(BI_COLOR_VERTEX), m_nIBufID, nStartV, m_nMCShipStateSquareQ * 4, nStartI,
+                              m_nMCShipStateSquareQ * 2, "battle_colorRectangle");
+        }
+		nStartV += m_nMCShipStateSquareQ * 4;
+		if (m_nShipStateSquareQ > 0)
+		{
             m_pRS->TextureSet(0, m_nShipStateTextureID);
             m_pRS->DrawBuffer(m_nVBufID, sizeof(BI_COLOR_VERTEX), m_nIBufID, nStartV, m_nShipStateSquareQ * 4, nStartI,
                               m_nShipStateSquareQ * 2, "battle_colorRectangle");
@@ -97,27 +129,28 @@ void BIShipIcon::Draw()
         {
             m_pRS->TextureSet(0, m_nShipClassTextureID);
             m_pRS->DrawBuffer(m_nVBufID, sizeof(BI_COLOR_VERTEX), m_nIBufID, nStartV, m_nShipClassSquareQ * 4, nStartI,
-                              m_nShipClassSquareQ * 2, "battle_alphacutcolor");
+                              m_nShipClassSquareQ * 2, "battle_colorRectangle");
         }
         nStartV += m_nShipClassSquareQ * 4;
+		
     }
 
     for (int32_t n = 0; n < m_nShipQuantity; n++)
     {
         if (m_Ship[n].pASailorQuantity)
         {
-            m_pRS->ExtPrint(m_idSailorFont, m_dwSailorFontColor, 0, PR_ALIGN_CENTER, true, m_fSailorFontScale, 0, 0,
+            m_pRS->ExtPrint(m_idSailorFont, m_dwSailorFontColor, 0, PR_ALIGN_CENTER, true, n == 0 ? m_fMCSailorFontScale : m_fSailorFontScale, 0, 0,
                             // shadow
-                            static_cast<int32_t>(m_Ship[n].pntPos.x) + m_SailorFontOffset.x,
-                            static_cast<int32_t>(m_Ship[n].pntPos.y) + m_SailorFontOffset.y, "%d",
+                            n == 0 ? static_cast<int32_t>(m_Ship[n].pntPos.x) + m_MCSailorFontOffset.x : static_cast<int32_t>(m_Ship[n].pntPos.x) + m_SailorFontOffset.x,
+                            n == 0 ? static_cast<int32_t>(m_Ship[n].pntPos.y) + m_MCSailorFontOffset.y : static_cast<int32_t>(m_Ship[n].pntPos.y) + m_SailorFontOffset.y, "%d",
                             static_cast<int32_t>(atof(m_Ship[n].pASailorQuantity->GetThisAttr())));
         }
-        if (!m_Ship[n].sShipName.empty())
+        if (!m_Ship[n].sShipName.empty()) 
         {
-            m_pRS->ExtPrint(m_idShipNameFont, m_dwShipNameFontColor, 0, PR_ALIGN_CENTER, true, m_fShipNameFontScale, 0,
+            m_pRS->ExtPrint(m_idShipNameFont, n == 0 ? m_dwShipNameFontColorMC : m_dwShipNameFontColor, 0, PR_ALIGN_CENTER, true, n == 0 ? m_fShipNameFontScaleMC : m_fShipNameFontScale, 0,
                             0, // font shadow
-                            static_cast<int32_t>(m_Ship[n].pntPos.x) + m_ShipNameFontOffset.x,
-                            static_cast<int32_t>(m_Ship[n].pntPos.y) + m_ShipNameFontOffset.y, "%s",
+                            n == 0 ? static_cast<int32_t>(m_Ship[n].pntPos.x) + m_ShipNameFontOffsetMC.x : static_cast<int32_t>(m_Ship[n].pntPos.x) + m_ShipNameFontOffset.x,
+                            n == 0 ? static_cast<int32_t>(m_Ship[n].pntPos.y) + m_ShipNameFontOffsetMC.y : static_cast<int32_t>(m_Ship[n].pntPos.y) + m_ShipNameFontOffset.y, "%s",
                             m_Ship[n].sShipName.c_str());
         }
     }
@@ -142,41 +175,72 @@ void BIShipIcon::Init(ATTRIBUTES *pRoot, ATTRIBUTES *pA)
     FULLRECT(m_rBackUV);
     ZERROPOINT(m_pntBackOffset);
     FILLPOINT(m_pntBackIconSize, 128, 128);
+	// belamour
+	m_nBackMCTextureID = -1;
+    m_dwBackMCColor = ARGB(255, 128, 128, 128);
+    FULLRECT(m_rBackMCUV);
+    ZERROPOINT(m_pntBackMCOffset);
+    FILLPOINT(m_pntBackMCIconSize, 128, 128);
+	
+	m_nShipStateBackTextureID = -1;
+    m_dwShipStateBackColor = ARGB(255, 128, 128, 128);
+    FULLRECT(m_rShipStateBackUV);
+    ZERROPOINT(m_pntShipStateBackOffset);
+    FILLPOINT(m_pntShipStateBackIconSize, 128, 128);
 
+	m_nShipStateMCTextureID = -1;
     m_nShipStateTextureID = -1;
+    m_dwShipStateMCColor = ARGB(255, 128, 128, 128);
     m_dwShipStateColor = ARGB(255, 128, 128, 128);
+    FULLRECT(m_rShipHPMCUV);
     FULLRECT(m_rShipHPUV);
+    ZERROPOINT(m_pntShipHPMCOffset);
     ZERROPOINT(m_pntShipHPOffset);
+    FILLPOINT(m_pntShipHPMCIconSize, 128, 128);
     FILLPOINT(m_pntShipHPIconSize, 128, 128);
+    FULLRECT(m_rShipSPMCUV);
     FULLRECT(m_rShipSPUV);
+    ZERROPOINT(m_pntShipSPMCOffset);
     ZERROPOINT(m_pntShipSPOffset);
+    FILLPOINT(m_pntShipSPMCIconSize, 128, 128);
     FILLPOINT(m_pntShipSPIconSize, 128, 128);
 
     m_nShipClassTextureID = -1;
     m_dwShipClassColor = ARGB(255, 128, 128, 128);
     FULLRECT(m_rShipClassUV);
+    ZERROPOINT(m_pntMCShipClassOffset);
     ZERROPOINT(m_pntShipClassOffset);
+    FILLPOINT(m_pntMCShipClassIconSize, 128, 128);
     FILLPOINT(m_pntShipClassIconSize, 128, 128);
 
     m_nShipTextureID = -1;
     m_dwShipColor = ARGB(255, 128, 128, 128);
     // FULLRECT( m_rShipUV );
     ZERROPOINT(m_pntShipOffset);
+    FILLPOINT(m_pntMCShipIconSize, 128, 128);
     FILLPOINT(m_pntShipIconSize, 128, 128);
 
     m_idSailorFont = -1;
     m_dwSailorFontColor = ARGB(255, 64, 64, 64);
-    m_fSailorFontScale = 1.f;
-    m_SailorFontOffset.x = -14;
+    m_fMCSailorFontScale = 1.f;
+    m_MCSailorFontOffset.x = -14;
+    m_MCSailorFontOffset.y = 18;
+	m_fSailorFontScale = 1.f;
+	m_SailorFontOffset.x = -14;
     m_SailorFontOffset.y = 18;
 
     m_idShipNameFont = -1;
+    m_dwShipNameFontColorMC = ARGB(255, 64, 64, 64);
     m_dwShipNameFontColor = ARGB(255, 64, 64, 64);
+    m_fShipNameFontScaleMC = 1.f;
     m_fShipNameFontScale = 1.f;
+	m_ShipNameFontOffsetMC.x = -14;
+    m_ShipNameFontOffsetMC.y = 40;
     m_ShipNameFontOffset.x = -14;
     m_ShipNameFontOffset.y = 40;
 
     m_nCommandListVerticalOffset = -48;
+    m_nCommandListVerticalOffsetMC = -48;
 
     for (n = 0; n < MAX_SHIP_QUANTITY; n++)
     {
@@ -190,8 +254,13 @@ void BIShipIcon::Init(ATTRIBUTES *pRoot, ATTRIBUTES *pA)
         if (pcTmp)
             m_idSailorFont = m_pRS->LoadFont(pcTmp);
         m_dwSailorFontColor = pA->GetAttributeAsDword("sailorfontcolor", m_dwSailorFontColor);
+        m_fMCSailorFontScale = pA->GetAttributeAsFloat("mcsailorfontscale", m_fMCSailorFontScale);
         m_fSailorFontScale = pA->GetAttributeAsFloat("sailorfontscale", m_fSailorFontScale);
-
+		
+		pcTmp = pA->GetAttribute("mcsailorfontoffset");
+        if (pcTmp)
+            sscanf(pcTmp, "%ld,%ld", &m_MCSailorFontOffset.x, &m_MCSailorFontOffset.y);
+		
         // ugeen 150920
         pcTmp = pA->GetAttribute("sailorfontoffset");
         if (pcTmp)
@@ -200,10 +269,15 @@ void BIShipIcon::Init(ATTRIBUTES *pRoot, ATTRIBUTES *pA)
         pcTmp = pA->GetAttribute("shipnamefontid");
         if (pcTmp)
             m_idShipNameFont = m_pRS->LoadFont(pcTmp);
+		m_dwShipNameFontColorMC = pA->GetAttributeAsDword("shipnamefontcolorMC", m_dwShipNameFontColorMC);
         m_dwShipNameFontColor = pA->GetAttributeAsDword("shipnamefontcolor", m_dwShipNameFontColor);
+        m_fShipNameFontScaleMC = pA->GetAttributeAsFloat("shipnamefontscaleMC", m_fShipNameFontScaleMC);
         m_fShipNameFontScale = pA->GetAttributeAsFloat("shipnamefontscale", m_fShipNameFontScale);
 
-        pcTmp = pA->GetAttribute("shipnamefontoffset");
+        pcTmp = pA->GetAttribute("shipnamefontoffsetMC");
+        if (pcTmp)
+            sscanf(pcTmp, "%ld,%ld", &m_ShipNameFontOffsetMC.x, &m_ShipNameFontOffsetMC.y);
+		pcTmp = pA->GetAttribute("shipnamefontoffset");
         if (pcTmp)
             sscanf(pcTmp, "%ld,%ld", &m_ShipNameFontOffset.x, &m_ShipNameFontOffset.y);
 
@@ -220,7 +294,36 @@ void BIShipIcon::Init(ATTRIBUTES *pRoot, ATTRIBUTES *pA)
         pcTmp = pA->GetAttribute("backiconsize");
         if (pcTmp)
             sscanf(pcTmp, "%f,%f", &m_pntBackIconSize.x, &m_pntBackIconSize.y);
-
+		// belamour -->
+		pcTmp = pA->GetAttribute("backmctexturename");
+        if (pcTmp)
+            m_nBackMCTextureID = m_pRS->TextureCreate(pcTmp);
+        m_dwBackMCColor = pA->GetAttributeAsDword("backmccolor", m_dwBackMCColor);
+        pcTmp = pA->GetAttribute("backmcuv");
+        if (pcTmp)
+            sscanf(pcTmp, "%f,%f,%f,%f", &m_rBackMCUV.left, &m_rBackMCUV.top, &m_rBackMCUV.right, &m_rBackMCUV.bottom);
+        pcTmp = pA->GetAttribute("backmcoffset");
+        if (pcTmp)
+            sscanf(pcTmp, "%f,%f", &m_pntBackMCOffset.x, &m_pntBackMCOffset.y);
+        pcTmp = pA->GetAttribute("backmciconsize");
+        if (pcTmp)
+            sscanf(pcTmp, "%f,%f", &m_pntBackMCIconSize.x, &m_pntBackMCIconSize.y);
+		
+		//MC ship state backtexture 
+		 pcTmp = pA->GetAttribute("shipstatebacktexturename");
+        if (pcTmp)
+            m_nShipStateBackTextureID = m_pRS->TextureCreate(pcTmp);
+        m_dwShipStateBackColor = pA->GetAttributeAsDword("shipstatebackcolor", m_dwShipStateBackColor);
+        pcTmp = pA->GetAttribute("shipstatebackuv");
+        if (pcTmp)
+            sscanf(pcTmp, "%f,%f,%f,%f", &m_rShipStateBackUV.left, &m_rShipStateBackUV.top, &m_rShipStateBackUV.right, &m_rShipStateBackUV.bottom);
+        pcTmp = pA->GetAttribute("shipstatebackoffset");
+        if (pcTmp)
+            sscanf(pcTmp, "%f,%f", &m_pntShipStateBackOffset.x, &m_pntShipStateBackOffset.y);
+        pcTmp = pA->GetAttribute("shipstatebackiconsize");
+        if (pcTmp)
+            sscanf(pcTmp, "%f,%f", &m_pntShipStateBackIconSize.x, &m_pntShipStateBackIconSize.y);
+		// <---
         pcTmp = pA->GetAttribute("shipstatetexturename");
         if (pcTmp)
             m_nShipStateTextureID = m_pRS->TextureCreate(pcTmp);
@@ -243,6 +346,29 @@ void BIShipIcon::Init(ATTRIBUTES *pRoot, ATTRIBUTES *pA)
         pcTmp = pA->GetAttribute("shipspiconsize");
         if (pcTmp)
             sscanf(pcTmp, "%f,%f", &m_pntShipSPIconSize.x, &m_pntShipSPIconSize.y);
+		// belamour
+		pcTmp = pA->GetAttribute("shipstatemctexturename");
+        if (pcTmp)
+            m_nShipStateMCTextureID = m_pRS->TextureCreate(pcTmp);
+        m_dwShipStateMCColor = pA->GetAttributeAsDword("shipstatemccolor", m_dwShipStateMCColor);
+        pcTmp = pA->GetAttribute("shiphpmcuv");
+        if (pcTmp)
+            sscanf(pcTmp, "%f,%f,%f,%f", &m_rShipHPMCUV.left, &m_rShipHPMCUV.top, &m_rShipHPMCUV.right, &m_rShipHPMCUV.bottom);
+        pcTmp = pA->GetAttribute("shiphpmcoffset");
+        if (pcTmp)
+            sscanf(pcTmp, "%f,%f", &m_pntShipHPMCOffset.x, &m_pntShipHPMCOffset.y);
+        pcTmp = pA->GetAttribute("shiphpmciconsize");
+        if (pcTmp)
+            sscanf(pcTmp, "%f,%f", &m_pntShipHPMCIconSize.x, &m_pntShipHPMCIconSize.y);
+        pcTmp = pA->GetAttribute("shipspmcuv");
+        if (pcTmp)
+            sscanf(pcTmp, "%f,%f,%f,%f", &m_rShipSPMCUV.left, &m_rShipSPMCUV.top, &m_rShipSPMCUV.right, &m_rShipSPMCUV.bottom);
+        pcTmp = pA->GetAttribute("shipspmcoffset");
+        if (pcTmp)
+            sscanf(pcTmp, "%f,%f", &m_pntShipSPMCOffset.x, &m_pntShipSPMCOffset.y);
+        pcTmp = pA->GetAttribute("shipspmciconsize");
+        if (pcTmp)
+            sscanf(pcTmp, "%f,%f", &m_pntShipSPMCIconSize.x, &m_pntShipSPMCIconSize.y);
 
         pcTmp = pA->GetAttribute("shipclasstexturename");
         if (pcTmp)
@@ -251,10 +377,16 @@ void BIShipIcon::Init(ATTRIBUTES *pRoot, ATTRIBUTES *pA)
         pcTmp = pA->GetAttribute("shipclassuv");
         if (pcTmp)
             sscanf(pcTmp, "%f,%f,%f,%f", &m_rShipClassUV.left, &m_rShipClassUV.top, &m_rShipClassUV.right,
-                   &m_rShipClassUV.bottom);
+                   &m_rShipClassUV.bottom); 
+		 pcTmp = pA->GetAttribute("mcshipclassoffset");
+        if (pcTmp)
+            sscanf(pcTmp, "%f,%f", &m_pntMCShipClassOffset.x, &m_pntMCShipClassOffset.y);
         pcTmp = pA->GetAttribute("shipclassoffset");
         if (pcTmp)
             sscanf(pcTmp, "%f,%f", &m_pntShipClassOffset.x, &m_pntShipClassOffset.y);
+		pcTmp = pA->GetAttribute("mcshipclassiconsize");
+        if (pcTmp)
+            sscanf(pcTmp, "%f,%f", &m_pntMCShipClassIconSize.x, &m_pntMCShipClassIconSize.y);
         pcTmp = pA->GetAttribute("shipclassiconsize");
         if (pcTmp)
             sscanf(pcTmp, "%f,%f", &m_pntShipClassIconSize.x, &m_pntShipClassIconSize.y);
@@ -267,6 +399,7 @@ void BIShipIcon::Init(ATTRIBUTES *pRoot, ATTRIBUTES *pA)
             } while (pcTmp[0]);
         }
 
+		m_nCommandListVerticalOffsetMC = pA->GetAttributeAsDword("commandlistverticaloffsetMC");
         m_nCommandListVerticalOffset = pA->GetAttributeAsDword("commandlistverticaloffset");
 
         pcTmp = pA->GetAttribute("shiptexturename");
@@ -282,6 +415,10 @@ void BIShipIcon::Init(ATTRIBUTES *pRoot, ATTRIBUTES *pA)
         pcTmp = pA->GetAttribute("shipiconsize");
         if (pcTmp)
             sscanf(pcTmp, "%f,%f", &m_pntShipIconSize.x, &m_pntShipIconSize.y);
+		
+		pcTmp = pA->GetAttribute("mcshipiconsize");
+        if (pcTmp)
+            sscanf(pcTmp, "%f,%f", &m_pntMCShipIconSize.x, &m_pntMCShipIconSize.y);
 
         m_dwShipNCols = pA->GetAttributeAsDword("xsize");
         m_dwShipNRows = pA->GetAttributeAsDword("ysize");
@@ -423,8 +560,11 @@ void BIShipIcon::Release()
     SetActive(false); // disable control
 
     STORM_DELETE(m_pCommandList);
+    TEXTURE_RELEASE(m_pRS, m_nBackMCTextureID);
     TEXTURE_RELEASE(m_pRS, m_nBackTextureID);
+    TEXTURE_RELEASE(m_pRS, m_nShipStateBackTextureID);
     TEXTURE_RELEASE(m_pRS, m_nShipTextureID);
+	TEXTURE_RELEASE(m_pRS, m_nShipStateMCTextureID);
     TEXTURE_RELEASE(m_pRS, m_nShipStateTextureID);
     TEXTURE_RELEASE(m_pRS, m_nShipClassTextureID);
     VERTEX_BUFFER_RELEASE(m_pRS, m_nVBufID);
@@ -432,8 +572,11 @@ void BIShipIcon::Release()
     FONT_RELEASE(m_pRS, m_idSailorFont);
 
     m_nMaxSquareQ = 0;
+    m_nBackMCSquareQ = 0;
     m_nBackSquareQ = 0;
+    m_nShipStateBackSquareQ = 0;
     m_nShipSquareQ = 0;
+    m_nMCShipStateSquareQ = 0;
     m_nShipStateSquareQ = 0;
     m_nShipClassSquareQ = 0;
 }
@@ -455,7 +598,7 @@ int32_t BIShipIcon::CalculateShipQuantity()
         m_Ship[n].sShipName.clear();
     }
 
-    // take the ship of the main character
+    // take the ship of the main character 
     pSD = g_ShipList.GetMainCharacterShip();
     if (pSD)
     {
@@ -466,11 +609,13 @@ int32_t BIShipIcon::CalculateShipQuantity()
         m_Ship[0].nMaxSP = pSD->maxSP;
         m_Ship[0].nShipClass = GetShipClass(m_Ship[0].nCharacterIndex);
         GetShipUVFromPictureIndex(pSD->pictureNum, m_Ship[0].rUV);
+		//belamour
+		GetShipClassUVFromPictureIndex(GetShipClass(m_Ship[0].nCharacterIndex), m_Ship[0].ShipClassUV);
         m_Ship[0].sShipName = pSD->pAttr ? pSD->pAttr->GetAttribute("name") : "noname";
         m_nShipQuantity++;
     }
 
-    // take the following "our" ships
+    // take the following "our" ships 
     for (pSD = g_ShipList.GetShipRoot(); pSD; pSD = pSD->next)
     {
         if (m_Ship[0].nCharacterIndex == pSD->characterIndex)
@@ -484,6 +629,8 @@ int32_t BIShipIcon::CalculateShipQuantity()
             m_Ship[m_nShipQuantity].nMaxSP = pSD->maxSP;
             m_Ship[m_nShipQuantity].nShipClass = GetShipClass(m_Ship[m_nShipQuantity].nCharacterIndex);
             GetShipUVFromPictureIndex(pSD->pictureNum, m_Ship[m_nShipQuantity].rUV);
+			// belamour
+			GetShipClassUVFromPictureIndex(GetShipClass(m_Ship[m_nShipQuantity].nCharacterIndex), m_Ship[m_nShipQuantity].ShipClassUV);
             m_Ship[m_nShipQuantity].sShipName = pSD->pAttr ? pSD->pAttr->GetAttribute("name") : "noname";
             m_nShipQuantity++;
         }
@@ -494,13 +641,16 @@ int32_t BIShipIcon::CalculateShipQuantity()
 
 void BIShipIcon::UpdateBuffers(int32_t nShipQ)
 {
-    const auto nBackSquareQ = nShipQ;
-    const auto nShipStateSquareQ = nShipQ * 2;
+    const auto nBackSquareQ = nShipQ-1;
+    const int32_t nShipStateBackSquareQ = 1;
+    const int32_t nBackMCSquareQ = 1;
+    const auto nShipStateSquareQ = (nShipQ-1) * 2;
+    const int32_t nMCShipStateSquareQ = 2;
     const int32_t nShipClassSquareQ = nShipQ;
     const int32_t nShipSquareQ = nShipQ;
 
     const int32_t nMaxSquareQ =
-        BIUtils::GetMaxFromFourLong(nBackSquareQ, nShipStateSquareQ, nShipClassSquareQ, nShipSquareQ);
+        BIUtils::GetMaxFromSevenLong(nBackSquareQ, nBackMCSquareQ, nShipStateBackSquareQ, nShipStateSquareQ, nMCShipStateSquareQ, nShipClassSquareQ, nShipSquareQ);
     if (m_nMaxSquareQ != nMaxSquareQ)
     {
         m_nMaxSquareQ = nMaxSquareQ;
@@ -509,17 +659,20 @@ void BIShipIcon::UpdateBuffers(int32_t nShipQ)
         FillIndexBuffer();
     }
 
-    if ((nBackSquareQ + nShipStateSquareQ + nShipClassSquareQ + nShipSquareQ) !=
-        (m_nBackSquareQ + m_nShipStateSquareQ + m_nShipClassSquareQ + m_nShipSquareQ))
+    if ((nBackSquareQ + nBackMCSquareQ + nShipStateSquareQ + nShipStateBackSquareQ + nMCShipStateSquareQ + nShipClassSquareQ + nShipSquareQ) !=
+        (m_nBackSquareQ + m_nBackMCSquareQ + m_nShipStateBackSquareQ + m_nShipStateSquareQ +  m_nMCShipStateSquareQ + m_nShipClassSquareQ + m_nShipSquareQ))
     {
         m_nBackSquareQ = nBackSquareQ;
+        m_nShipStateBackSquareQ = nShipStateBackSquareQ;
+        m_nBackMCSquareQ = nBackMCSquareQ;
+        m_nMCShipStateSquareQ = nMCShipStateSquareQ;
         m_nShipStateSquareQ = nShipStateSquareQ;
         m_nShipClassSquareQ = nShipClassSquareQ;
         m_nShipSquareQ = nShipSquareQ;
         VERTEX_BUFFER_RELEASE(m_pRS, m_nVBufID);
         m_nVBufID = m_pRS->CreateVertexBuffer(
             BI_COLOR_VERTEX_FORMAT,
-            (m_nBackSquareQ + m_nShipStateSquareQ + m_nShipClassSquareQ + m_nShipSquareQ) * 4 * sizeof(BI_COLOR_VERTEX),
+            (m_nBackSquareQ + m_nBackMCSquareQ + m_nShipStateBackSquareQ + m_nShipStateSquareQ + m_nMCShipStateSquareQ + m_nShipClassSquareQ + m_nShipSquareQ) * 4 * sizeof(BI_COLOR_VERTEX),
             D3DUSAGE_WRITEONLY);
     }
     FillVertexBuffer();
@@ -560,29 +713,55 @@ void BIShipIcon::FillVertexBuffer()
         for (n = 0; n < m_nShipQuantity; n++)
         {
             vn += WriteSquareToVBuff(&pV[vn], m_Ship[n].rUV, m_dwShipColor, m_Ship[n].pntPos + m_pntShipOffset,
-                                     m_pntShipIconSize);
+                                     n == 0 ? m_pntMCShipIconSize : m_pntShipIconSize);
         }
 
         for (n = 0; n < m_nShipQuantity; n++)
-            vn += WriteSquareToVBuff(&pV[vn], m_rBackUV, m_dwBackColor, m_Ship[n].pntPos + m_pntBackOffset,
+		{
+			if(n == 0)
+			{
+				vn += WriteSquareToVBuff(&pV[vn], m_rShipStateBackUV, m_dwShipStateBackColor, m_Ship[n].pntPos + m_pntShipStateBackOffset,
+                                     m_pntShipStateBackIconSize);
+				vn += WriteSquareToVBuff(&pV[vn], m_rBackMCUV, m_dwBackMCColor, m_Ship[n].pntPos + m_pntBackMCOffset,
+                                     m_pntBackMCIconSize);
+			}
+			else
+			{
+				vn += WriteSquareToVBuff(&pV[vn], m_rBackUV, m_dwBackColor, m_Ship[n].pntPos + m_pntBackOffset,
                                      m_pntBackIconSize);
-
+			}
+		}
         for (n = 0; n < m_nShipQuantity; n++)
         {
-            vn += WriteSquareToVBuffWithProgress(&pV[vn], m_rShipHPUV, m_dwShipStateColor,
+			if(n == 0)
+			{
+				vn += WriteSquareToVBuffWithProgress(&pV[vn], m_rShipHPMCUV, m_dwShipStateMCColor,
+													 m_Ship[n].pntPos + m_pntShipHPMCOffset, m_pntShipHPMCIconSize,
+													 0.f, 0.f, 0.f, GetProgressShipHP(n));
+				vn += WriteSquareToVBuffWithProgress(&pV[vn], m_rShipSPMCUV, m_dwShipStateMCColor,
+													 m_Ship[n].pntPos + m_pntShipSPMCOffset, m_pntShipSPMCIconSize,
+													 0.f, 0.f, 0.f, GetProgressShipSP(n));
+			}
+			else
+			{
+				vn += WriteSquareToVBuffWithProgress(&pV[vn], m_rShipHPUV, m_dwShipStateColor,
                                                  m_Ship[n].pntPos + m_pntShipHPOffset, m_pntShipHPIconSize,
                                                  GetProgressShipHP(n), 0.f, 0.f, 0.f);
-            vn += WriteSquareToVBuffWithProgress(&pV[vn], m_rShipSPUV, m_dwShipStateColor,
+				vn += WriteSquareToVBuffWithProgress(&pV[vn], m_rShipSPUV, m_dwShipStateColor,
                                                  m_Ship[n].pntPos + m_pntShipSPOffset, m_pntShipSPIconSize,
                                                  GetProgressShipSP(n), 0.f, 0.f, 0.f);
+			}
         }
-
+		
         for (n = 0; n < m_nShipQuantity; n++)
-            vn += WriteSquareToVBuffWithProgress(&pV[vn], m_rShipClassUV, m_dwShipClassColor,
+            /* vn += WriteSquareToVBuffWithProgress(&pV[vn], m_rShipClassUV, m_dwShipClassColor,
                                                  m_Ship[n].pntPos + m_pntShipClassOffset, m_pntShipClassIconSize, 0.f,
-                                                 0.f, 0.f, 1.f - GetProgressShipClass(n));
-        // vn += WriteSquareToVBuff( &pV[vn], m_rShipClassUV, m_dwShipClassColor, m_Ship[n].pntPos+m_pntShipClassOffset,
-        // m_pntShipClassIconSize );
+                                                 0.f, 0.f, 1.f - GetProgressShipClass(n));  */
+			// belamour
+			vn += n == 0 ? WriteSquareToVBuff( &pV[vn], m_Ship[n].ShipClassUV, m_dwShipClassColor, m_Ship[n].pntPos+m_pntMCShipClassOffset,
+											 m_pntMCShipClassIconSize )
+						 :  WriteSquareToVBuff( &pV[vn], m_Ship[n].ShipClassUV, m_dwShipClassColor, m_Ship[n].pntPos+m_pntShipClassOffset,
+											 m_pntShipClassIconSize );
 
         m_pRS->UnLockVertexBuffer(m_nVBufID);
     }
@@ -705,6 +884,7 @@ int32_t BIShipIcon::GetCurrentCommandTopLine()
     if (n < 0 || n >= m_nShipQuantity)
         n = 0;
     m_nCurrentShipIndex = n;
+	if (n == 0) return static_cast<int32_t>(m_Ship[0].pntPos.y) + m_nCommandListVerticalOffsetMC;
     return static_cast<int32_t>(m_Ship[n].pntPos.y) + m_nCommandListVerticalOffset;
 }
 
@@ -780,6 +960,18 @@ void BIShipIcon::GetShipUVFromPictureIndex(int32_t nPicIndex, FRECT &rUV)
     rUV.right = rUV.left + pictureWidth;
     rUV.bottom = rUV.top + pictureHeight; // boal
 }
+
+// belamour
+void BIShipIcon::GetShipClassUVFromPictureIndex(int32_t nPicIndex, FRECT &ShipClassUV)
+{
+	
+    const float pw = 1.f/8.f; 
+	
+	ShipClassUV.left = pw*(nPicIndex);
+    ShipClassUV.top = 0.f; 
+    ShipClassUV.right = ShipClassUV.left + pw;
+    ShipClassUV.bottom = 1.f; 
+} 
 
 int32_t BIShipIcon::GetShipClass(int32_t nCharIdx)
 {
