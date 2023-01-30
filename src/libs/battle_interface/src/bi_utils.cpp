@@ -247,19 +247,21 @@ int32_t BIUtils::GetMaxFromFourLong(int32_t n1, int32_t n2, int32_t n3, int32_t 
 
 int32_t BIUtils::GetMaxFromSevenLong(int32_t n1, int32_t n2, int32_t n3, int32_t n4, int32_t n5, int32_t n6, int32_t n7)
 {
-    if (n1 >= n2 && n1 >= n3 && n1 >= n4 && n1 >= n5 && n1 >= n6 && n1 >= n7)
-        return n1;
-    if (n2 >= n3 && n2 >= n4 && n2 >= n5 && n2 >= n6 && n2 >= n7)
-        return n2;
-    if (n3 >= n4 && n3 >= n5 && n3 >= n6 && n3 >= n7)
-        return n3;
-	if (n4 >= n5 && n4 >= n6 && n4 >= n7)
-		return n4;
-	if (n5 >= n6 && n5 >= n7)
-		return n5;
-	if (n6 >= n7)
-		return n6;
-	return n7;
+	int32_t max = n1;
+	
+	if (max<n2)
+	   max=n2;
+	if (max<n3)
+	   max=n3;
+	if (max<n4)
+	   max=n4;
+	if (max<n5)
+	   max=n5;
+    if (max<n6)
+	   max=n6;
+	if (max<n7)
+	   max=n7;
+	return max;
 }
 
 float BIUtils::GetFromStr_Float(const char *&pcStr, float fDefault)
