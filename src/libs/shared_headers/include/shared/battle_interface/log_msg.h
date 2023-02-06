@@ -9,3 +9,6 @@
 #define LI_CLEAR_STRINGS 45028       // ""
 // "s..." for different messages "SetTimeScale", float fScale
 #define LI_OTHER_MSG 45029
+#define LOG_ADD_PIC 45030         
+#define LOG_TIME_SPEED 45031
+#define LOG_LEVEL_UP 45032
