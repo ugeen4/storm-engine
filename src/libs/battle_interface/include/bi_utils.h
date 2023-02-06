@@ -24,6 +24,7 @@ class BITextInfo final
     float fScale;
     int32_t nFont;
     uint32_t dwColor;
+	int32_t nAlign;
     bool bShadow;
 
     ATTRIBUTES *pARefresh;
@@ -107,8 +108,7 @@ class BIUtils
     static bool GetIntervalRect(float fk, const FRECT &r1, const FRECT &r2, FRECT &rOut);
 
     static int32_t GetMaxFromFourLong(int32_t n1, int32_t n2, int32_t n3, int32_t n4);
-    static int32_t GetMaxFromSevenLong(int32_t n1, int32_t n2, int32_t n3, int32_t n4, int32_t n5, int32_t n6, int32_t n7);
-
+	
     static float GetFromStr_Float(const char *&pcStr, float fDefault);
 
     static void FillTextInfoArray(VDX9RENDER *pRS, ATTRIBUTES *pA, std::vector<BITextInfo> &tia);

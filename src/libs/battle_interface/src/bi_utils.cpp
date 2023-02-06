@@ -245,25 +245,6 @@ int32_t BIUtils::GetMaxFromFourLong(int32_t n1, int32_t n2, int32_t n3, int32_t 
     return n4;
 }
 
-int32_t BIUtils::GetMaxFromSevenLong(int32_t n1, int32_t n2, int32_t n3, int32_t n4, int32_t n5, int32_t n6, int32_t n7)
-{
-	int32_t max = n1;
-	
-	if (max<n2)
-	   max=n2;
-	if (max<n3)
-	   max=n3;
-	if (max<n4)
-	   max=n4;
-	if (max<n5)
-	   max=n5;
-    if (max<n6)
-	   max=n6;
-	if (max<n7)
-	   max=n7;
-	return max;
-}
-
 float BIUtils::GetFromStr_Float(const char *&pcStr, float fDefault)
 {
     if (!pcStr)
@@ -359,7 +340,8 @@ void BITextInfo::Init(VDX9RENDER *rs, ATTRIBUTES *pA)
     fScale = pA->GetAttributeAsFloat("scale", 1.f);
     dwColor = pA->GetAttributeAsDword("color", 0xFFFFFFFF);
     bShadow = pA->GetAttributeAsDword("shadow", 1) != 0;
-
+	nAlign = BIUtils::GetAlignmentFromAttr(pA, "align", PR_ALIGN_CENTER);
+	
     ATTRIBUTES *pAttr = pA->GetAttributeClass("pos");
     if (pAttr)
     {
@@ -388,6 +370,7 @@ void BITextInfo::Print()
             const char *textAttr = pARefresh->GetAttribute("text");
             sText = textAttr ? textAttr : "";
 			dwColor = pARefresh->GetAttributeAsDword("color", 0xFFFFFFFF);
+			nAlign = BIUtils::GetAlignmentFromAttr(pARefresh, "align", PR_ALIGN_CENTER);
 			ATTRIBUTES *pAttr = pARefresh->GetAttributeClass("pos");
 			if (pAttr)
 			{
@@ -400,7 +383,7 @@ void BITextInfo::Print()
 			}
         }
         if (!sText.empty())
-            pRS->ExtPrint(nFont, dwColor, 0, PR_ALIGN_CENTER, bShadow, fScale, 0, 0, pos.x, pos.y, "%s", sText.c_str());
+            pRS->ExtPrint(nFont, dwColor, 0, nAlign, bShadow, fScale, 0, 0, pos.x, pos.y, "%s", sText.c_str());
     }
 }
 
@@ -408,7 +391,7 @@ void BITextInfo::Print(std::string outputText)
 {
     if (nFont != -1 && !outputText.empty())
     {
-        pRS->ExtPrint(nFont, dwColor, 0, PR_ALIGN_CENTER, bShadow, fScale, 0, 0, pos.x, pos.y, "%s",
+        pRS->ExtPrint(nFont, dwColor, 0, nAlign, bShadow, fScale, 0, 0, pos.x, pos.y, "%s",
                       outputText.c_str());
     }
 }

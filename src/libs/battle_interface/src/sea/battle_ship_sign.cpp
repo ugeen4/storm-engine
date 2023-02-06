@@ -650,7 +650,7 @@ void BIShipIcon::UpdateBuffers(int32_t nShipQ)
     const int32_t nShipSquareQ = nShipQ;
 
     const int32_t nMaxSquareQ =
-        BIUtils::GetMaxFromSevenLong(nBackSquareQ, nBackMCSquareQ, nShipStateBackSquareQ, nShipStateSquareQ, nMCShipStateSquareQ, nShipClassSquareQ, nShipSquareQ);
+        std::max({nBackSquareQ, nBackMCSquareQ, nShipStateBackSquareQ, nShipStateSquareQ, nMCShipStateSquareQ, nShipClassSquareQ, nShipSquareQ});
     if (m_nMaxSquareQ != nMaxSquareQ)
     {
         m_nMaxSquareQ = nMaxSquareQ;
