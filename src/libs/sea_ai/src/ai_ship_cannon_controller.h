@@ -134,7 +134,6 @@ class AIShipCannonController
 
     // init section
     bool Init(ATTRIBUTES *_pAShip);
-	uint32_t GetIntervalColor(uint32_t minV, uint32_t maxV, float fpar);
     void SetAIShip(AIShip *pShip)
     {
         pOurAIShip = pShip;
