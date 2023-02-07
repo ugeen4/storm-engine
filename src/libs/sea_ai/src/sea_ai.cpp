@@ -345,6 +345,8 @@ uint64_t SEA_AI::ProcessMessage(MESSAGE &message)
         AIShipCannonController::ColorR = message.Long();
         AIShipCannonController::ColorNA = message.Long();
         AIShipCannonController::ColorNR = message.Long();
+		AIShipCannonController::blinkUP = message.Float();
+        AIShipCannonController::blinkDOWN = message.Float();
         AIShipCannonController::bShowCannonsRange = (message.Long() != 0);
     break;
         // boal 08.08.06 method of recounting guns on the ship <--

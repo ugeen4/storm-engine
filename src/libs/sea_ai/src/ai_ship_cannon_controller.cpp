@@ -11,7 +11,12 @@ int AIShipCannonController::ColorA = 0;
 int AIShipCannonController::ColorR = 0;
 int AIShipCannonController::ColorNA = 0;
 int AIShipCannonController::ColorNR = 0;
+int AIShipCannonController::blinkcol = 0;
+float alpha = 0.0f;
+float AIShipCannonController::blinkUP = 0.0003f;
+float AIShipCannonController::blinkDOWN = 0.003f;
 bool AIShipCannonController::bShowCannonsRange = true;
+bool bUp = true;
 
 AIShipCannonController::AIShipCannonController(AIShip *_pShip) : bReload(false), bNotEnoughBalls(false)
 {
@@ -680,11 +685,26 @@ void AIShipCannonController::Realize(float fDeltaTime)
                 RotateAroundY(v[2].x, v[2].z, vZ.z, vZ.x);
                 v[2] += v[0];
 
-				if(debugDrawToggle) ColorA = ColorR = ColorNA = ColorNR = ARGB(0x0F, 0x90, 0xEE, 0x90);
+				if(debugDrawToggle) ColorA = ColorR = ColorNA = ColorNR = ARGB(0x0F, 0x90, 0xEE, 0x90);		
+				if(!bort.isCharged())
+				{
+					blinkcol = (ColorNR >> 24);
+					if(bUp)
+					{
+						alpha += blinkUP * core.GetDeltaTime();
+						if(alpha > blinkcol) bUp = false;
+					}
+					else
+					{
+						alpha -= blinkDOWN * core.GetDeltaTime();
+						if(alpha < 0) bUp = true;
+					}
+					blinkcol = ColorNA + (static_cast<int32_t>(alpha) << 24);
+				}
 				
                 Verts.emplace_back(tr_vertex{v[0], bort.isCharged() ? static_cast<uint32_t>(ColorA) : static_cast<uint32_t>(ColorNA)});
-                Verts.emplace_back(tr_vertex{v[1], bort.isCharged() ? static_cast<uint32_t>(ColorR) : static_cast<uint32_t>(ColorNR)});
-				Verts.emplace_back(tr_vertex{v[2], bort.isCharged() ? static_cast<uint32_t>(ColorR) : static_cast<uint32_t>(ColorNR)});																													   
+                Verts.emplace_back(tr_vertex{v[1], bort.isCharged() ? static_cast<uint32_t>(ColorR) : static_cast<uint32_t>(blinkcol)});
+				Verts.emplace_back(tr_vertex{v[2], bort.isCharged() ? static_cast<uint32_t>(ColorR) : static_cast<uint32_t>(blinkcol)});	 																											   
             }
         }
     }

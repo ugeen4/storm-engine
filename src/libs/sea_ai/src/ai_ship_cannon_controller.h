@@ -134,7 +134,7 @@ class AIShipCannonController
 
     // init section
     bool Init(ATTRIBUTES *_pAShip);
-
+	uint32_t GetIntervalColor(uint32_t minV, uint32_t maxV, float fpar);
     void SetAIShip(AIShip *pShip)
     {
         pOurAIShip = pShip;
@@ -151,8 +151,11 @@ class AIShipCannonController
     static float fMaxCannonDamageDistance;
     static float fMaxCannonDamageRadiusPoint;
 
-	static int ColorA, ColorR, ColorNA, ColorNR;
+	static int ColorA, ColorR, ColorNA, ColorNR, blinkcol;
 	static bool bShowCannonsRange;
+	float alpha;
+	static float blinkUP;
+	static float blinkDOWN;
 	
     void Save(CSaveLoad *pSL);
     void Load(CSaveLoad *pSL);
