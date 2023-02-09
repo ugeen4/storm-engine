@@ -305,7 +305,7 @@ void ILogAndActions::Realize(uint32_t delta_time)
         CMatrix matw;
         rs->SetTransform(D3DTS_WORLD, matw);
 		//backimage
-		if (m_idActionBackTexture != -1L && m_bThatRealAction)
+		if (m_idActionBackTexture != -1L && m_bThatRealAction && rs->StringWidth(m_ActionHint2.sText.c_str(), m_ActionHint2.nFont, m_ActionHint2.fScale, 0) > 1)
 		{
 			rs->TextureSet(0, m_idActionBackTexture);
 			rs->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, BI_COLOR_VERTEX_FORMAT, 2, m_ActionBackVertex,
